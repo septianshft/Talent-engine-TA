@@ -9,6 +9,7 @@ use Livewire\Volt\Component;
 new class extends Component {
     public string $name = '';
     public string $email = '';
+    public ?string $phone_number = ''; // Add phone number property
 
     /**
      * Mount the component.
@@ -17,6 +18,7 @@ new class extends Component {
     {
         $this->name = Auth::user()->name;
         $this->email = Auth::user()->email;
+        $this->phone_number = Auth::user()->phone_number; // Initialize phone number
     }
 
     /**
@@ -37,6 +39,7 @@ new class extends Component {
                 'max:255',
                 Rule::unique(User::class)->ignore($user->id)
             ],
+            'phone_number' => ['nullable', 'string', 'max:20'], // Add validation for phone number
         ]);
 
         $user->fill($validated);
@@ -78,6 +81,8 @@ new class extends Component {
 
             <div>
                 <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
+
+                <flux:input wire:model="phone_number" :label="__('Phone Number (Optional)')" type="tel" autocomplete="tel" />
 
                 @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail &&! auth()->user()->hasVerifiedEmail())
                     <div>

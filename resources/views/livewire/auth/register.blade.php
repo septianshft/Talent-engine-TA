@@ -13,6 +13,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
+    public string $phone_number = ''; // Add phone number property
     public string $role = 'user'; // Add role property, default to 'user'
 
     /**
@@ -24,6 +25,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'phone_number' => ['nullable', 'string', 'max:20'], // Add validation for phone number (optional)
             'role' => ['required', 'string', 'in:admin,user,talent'], // Add validation for role, including 'talent'
         ]);
 
@@ -72,6 +74,15 @@ new #[Layout('components.layouts.auth')] class extends Component {
             required
             autocomplete="email"
             placeholder="email@example.com"
+        />
+
+        <!-- Phone Number -->
+        <flux:input
+            wire:model="phone_number"
+            :label="__('Phone Number (Optional)')"
+            type="tel"
+            autocomplete="tel"
+            placeholder="e.g., +6281234567890"
         />
 
         <!-- Password -->

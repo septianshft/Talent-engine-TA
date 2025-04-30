@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -23,6 +25,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'phone_number',
     ];
 
     /**
@@ -57,5 +60,29 @@ class User extends Authenticatable
             ->explode(' ')
             ->map(fn (string $name) => Str::of($name)->substr(0, 1))
             ->implode('');
+    }
+
+    /**
+     * The competencies that this user (talent) possesses.
+     */
+    public function competencies(): BelongsToMany
+    {
+        return $this->belongsToMany(Competency::class, 'competency_user');
+    }
+
+    /**
+     * The talent requests created by this user.
+     */
+    public function createdRequests(): HasMany
+    {
+        return $this->hasMany(TalentRequest::class, 'user_id');
+    }
+
+    /**
+     * The talent requests received by this user (talent).
+     */
+    public function receivedRequests(): HasMany
+    {
+        return $this->hasMany(TalentRequest::class, 'talent_id');
     }
 }
