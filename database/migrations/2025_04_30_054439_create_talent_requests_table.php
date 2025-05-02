@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('talent_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete(); // The user making the request
-            $table->foreignId('talent_id')->constrained('users')->cascadeOnDelete(); // The talent being requested
+            $table->foreignId('talent_id')->nullable()->constrained('users')->cascadeOnDelete(); // The talent being requested (can be null initially)
             $table->text('details')->nullable(); // Optional details about the request
             $table->string('status')->default('pending_admin'); // e.g., pending_admin, pending_talent, approved, rejected_admin, rejected_talent, completed
             $table->timestamps();

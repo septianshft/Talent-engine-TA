@@ -24,7 +24,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
+        // 'role', // Removed, using roles relationship now
         'phone_number',
     ];
 
@@ -84,5 +84,24 @@ class User extends Authenticatable
     public function receivedRequests(): HasMany
     {
         return $this->hasMany(TalentRequest::class, 'talent_id');
+    }
+
+    /**
+     * The roles that belong to the user.
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'role_user');
+    }
+
+    /**
+     * Check if the user has a specific role.
+     *
+     * @param string $roleName
+     * @return bool
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->roles()->where('name', $roleName)->exists();
     }
 }

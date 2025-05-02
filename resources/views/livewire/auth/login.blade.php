@@ -42,12 +42,12 @@ new #[Layout('components.layouts.auth')] class extends Component {
 
         // Redirect based on role
         $user = Auth::user();
-        if ($user->role === 'admin') {
+        if ($user->hasRole('admin')) { // Use hasRole() method
             // Assuming admin dashboard route is named 'admin.dashboard'
             // Make sure to define this route in routes/web.php
             $this->redirect(route('admin.dashboard'), navigate: true);
             return;
-        } elseif ($user->role === 'talent') {
+        } elseif ($user->hasRole('talent')) { // Use hasRole() method
             // Assuming talent dashboard route is named 'talent.dashboard'
             // Make sure to define this route in routes/web.php
             $this->redirect(route('talent.dashboard'), navigate: true);

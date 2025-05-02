@@ -21,20 +21,25 @@ class CheckRole
             return redirect('login');
         }
 
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        if ($user->role !== $role) {
-            // Redirect based on their actual role if they try to access the wrong dashboard
-            if ($user->role === 'admin') {
-                return redirect('/admin/dashboard');
-            } elseif ($user->role === 'talent') {
-                return redirect('/talent/dashboard'); // Assuming '/talent/dashboard' is the talent dashboard
-            } elseif ($user->role === 'user') {
-                return redirect('/dashboard'); // Assuming '/dashboard' is the user dashboard
+        // Check if the user has the required role
+        if (!$user->hasRole($role)) {
+            // If the user doesn't have the required role, redirect them based on their actual primary role.
+            // Note: This assumes a user primarily belongs to one main role for dashboard access.
+            // You might need more complex logic if users can have multiple significant roles simultaneously.
+            if ($user->hasRole('admin')) {
+                return redirect()->route('admin.dashboard');
+            } elseif ($user->hasRole('talent')) {
+                return redirect()->route('talent.dashboard');
+            } elseif ($user->hasRole('user')) {
+                return redirect()->route('dashboard');
             }
-            // Fallback if role is somehow unexpected (shouldn't happen with enum)
+
+            // Fallback if no primary role dashboard is found or role is unexpected
             Auth::logout();
-            return redirect('login')->with('error', 'Unauthorized access.');
+            return redirect('login')->with('error', 'Unauthorized access or role mismatch.');
         }
 
         return $next($request);

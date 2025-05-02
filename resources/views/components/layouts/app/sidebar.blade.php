@@ -16,20 +16,20 @@
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
 
                     {{-- Admin Links --}}
-                    @if (auth()->user()->role === 'admin')
+                    @if (auth()->user()->hasRole('admin'))
                         <flux:navlist.item icon="academic-cap" :href="route('admin.competencies.index')" :current="request()->routeIs('admin.competencies.*')" wire:navigate>{{ __('Competencies') }}</flux:navlist.item>
                         <flux:navlist.item icon="document-check" :href="route('admin.talent-requests.index')" :current="request()->routeIs('admin.talent-requests.*')" wire:navigate>{{ __('Talent Requests') }}</flux:navlist.item>
                         {{-- Add other admin links here --}}
                     @endif
 
                     {{-- User Links --}}
-                    @if (auth()->user()->role === 'user')
+                    @if (auth()->user()->hasRole('user'))
                         <flux:navlist.item icon="document-plus" :href="route('user.requests.index')" :current="request()->routeIs('user.requests.*')" wire:navigate>{{ __('My Requests') }}</flux:navlist.item>
                         {{-- Add other user links here --}}
                     @endif
 
                     {{-- Talent Links --}}
-                    @if (auth()->user()->role === 'talent')
+                    @if (auth()->user()->hasRole('talent'))
                         <flux:navlist.item icon="inbox-arrow-down" :href="route('talent.requests.index')" :current="request()->routeIs('talent.requests.*')" wire:navigate>{{ __('Received Requests') }}</flux:navlist.item>
                         {{-- Add other talent links here --}}
                     @endif

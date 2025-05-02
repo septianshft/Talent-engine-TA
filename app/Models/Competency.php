@@ -19,5 +19,13 @@ class Competency extends Model
     {
         return $this->belongsToMany(User::class, 'competency_user');
     }
-    //
+
+    /**
+     * The talent requests that require this competency.
+     */
+    public function talentRequests(): BelongsToMany
+    {
+        return $this->belongsToMany(TalentRequest::class, 'competency_talent_request')
+                    ->withPivot('required_proficiency_level');
+    }
 }

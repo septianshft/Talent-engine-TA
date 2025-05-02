@@ -7,10 +7,10 @@
 
     <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
         <div class="mb-4">
-            <strong class="text-gray-700">From:</strong> {{ $talentRequest->user->name ?? 'N/A' }}
+            <strong class="text-gray-700">From:</strong> {{ $talentRequest->requestingUser->name ?? 'N/A' }}
         </div>
         <div class="mb-4">
-            <strong class="text-gray-700">User Phone:</strong> {{ $talentRequest->user->phone_number ?? 'N/A' }}
+            <strong class="text-gray-700">User Phone:</strong> {{ $talentRequest->requestingUser->phone_number ?? 'N/A' }}
         </div>
         <div class="mb-4">
             <strong class="text-gray-700">Received:</strong> {{ $talentRequest->created_at->format('Y-m-d H:i') }}

@@ -18,7 +18,8 @@ class TalentRequestController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $requests = $user->createdRequests()->with('talent')->latest()->paginate(10);
+        // Corrected relationship name from 'talent' to 'assignedTalent'
+        $requests = $user->createdRequests()->with('assignedTalent')->latest()->paginate(10);
 
         return view('user.requests.index', compact('requests'));
     }
@@ -26,21 +27,12 @@ class TalentRequestController extends Controller
     /**
      * Show the form for creating a new talent request.
      */
-    public function create(Request $request)
+    public function create()
     {
+        // Fetch competencies for the form
         $competencies = Competency::orderBy('name')->get();
-        $selectedCompetencyId = $request->input('competency_id');
 
-        // Get talents, optionally filtered by selected competency
-        $talentsQuery = User::where('role', 'talent');
-        if ($selectedCompetencyId) {
-            $talentsQuery->whereHas('competencies', function ($query) use ($selectedCompetencyId) {
-                $query->where('competencies.id', $selectedCompetencyId);
-            });
-        }
-        $talents = $talentsQuery->orderBy('name')->get(['id', 'name']);
-
-        return view('user.requests.create', compact('competencies', 'talents', 'selectedCompetencyId'));
+        return view('user.requests.create', compact('competencies'));
     }
 
     /**
@@ -48,23 +40,56 @@ class TalentRequestController extends Controller
      */
     public function store(Request $request)
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+        // Define proficiency levels for validation
+        $proficiencyLevels = [1, 2, 3, 4]; // Completion, Intermediate, Advanced, Expert
 
+        // Validate the request
         $validated = $request->validate([
-            'talent_id' => 'required|exists:users,id,role,talent', // Ensure talent exists and has the 'talent' role
+            // Keep 'competencies' required to ensure the array exists, even if empty initially from the form perspective
+            'competencies' => 'present|array', 
+            // Make proficiency level nullable, we'll filter empty ones later
+            'competencies.*' => ['nullable', 'integer', 'in:' . implode(',', $proficiencyLevels)], 
             'details' => 'required|string|max:1000',
+        ], [
+            'competencies.required' => 'Please select at least one competency and its required proficiency level.',
+            'competencies.*.required' => 'Please select a proficiency level for each chosen competency.',
+            'competencies.*.in' => 'Invalid proficiency level selected.',
         ]);
 
-        $user->createdRequests()->create([
-            'talent_id' => $validated['talent_id'],
+        // Create the talent request (without talent_id initially)
+        $talentRequest = TalentRequest::create([
+            'user_id' => Auth::id(),
+            // 'talent_id' will be assigned later, perhaps by admin or DSS
             'details' => $validated['details'],
-            'status' => 'pending_admin', // Initial status
+            'status' => 'pending_admin', // Initial status, admin needs to review/assign
         ]);
 
-        // Optional: Add notification for admin here
+        // Prepare data for attaching competencies with proficiency levels
+        $competenciesToAttach = [];
+        // Filter out competencies where no proficiency level was selected
+        $selectedCompetencies = array_filter($validated['competencies'] ?? [], function($level) {
+            return !is_null($level) && $level !== '';
+        });
 
-        return redirect()->route('user.requests.index')->with('success', 'Talent request submitted successfully.');
+        // Ensure at least one competency was actually selected with a level
+        if (empty($selectedCompetencies)) {
+            // Redirect back with an error if no competencies were properly selected
+            return back()->withErrors(['competencies' => 'Please select at least one competency and specify its required proficiency level.'])->withInput();
+        }
+
+        foreach ($selectedCompetencies as $competencyId => $proficiencyLevel) {
+            // Check if competency exists (optional, but good practice)
+            if (Competency::find($competencyId)) { 
+                $competenciesToAttach[$competencyId] = ['required_proficiency_level' => $proficiencyLevel];
+            }
+        }
+
+        // Attach the required competencies with their proficiency levels
+        if (!empty($competenciesToAttach)) {
+            $talentRequest->competencies()->attach($competenciesToAttach);
+        }
+
+        return redirect()->route('user.requests.index')->with('success', 'Talent request submitted successfully. It will be reviewed by an administrator.');
     }
 
     /**

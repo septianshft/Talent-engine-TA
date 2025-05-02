@@ -7,11 +7,12 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <livewire:admin.user-management />
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg border border-gray-200 dark:border-gray-700">
+                <div class="p-8 text-gray-900 dark:text-gray-100 space-y-4">
+                    <livewire:admin.user-management/>
                 </div>
             </div>
         </div>
     </div>
 </x-layouts.app>
+

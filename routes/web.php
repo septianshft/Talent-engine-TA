@@ -5,6 +5,7 @@ use Livewire\Volt\Volt;
 use App\Http\Controllers\Admin\CompetencyController;
 use App\Http\Controllers\User\TalentRequestController as UserTalentRequestController;
 use App\Http\Controllers\Talent\TalentRequestController as TalentTalentRequestController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -31,7 +32,9 @@ Route::view('admin/dashboard', 'admin.dashboard') // Assuming you have an admin.
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin/talent-requests')->name('admin.talent-requests.')->group(function () {
     Route::get('/', [App\Http\Controllers\Admin\TalentRequestController::class, 'index'])->name('index');
     Route::get('/{talentRequest}', [App\Http\Controllers\Admin\TalentRequestController::class, 'show'])->name('show');
-    Route::patch('/{talentRequest}', [App\Http\Controllers\Admin\TalentRequestController::class, 'update'])->name('update');
+    Route::patch('/{talentRequest}', [App\Http\Controllers\Admin\TalentRequestController::class, 'update'])->name('update'); // For rejection
+    Route::patch('/{talentRequest}/assign', [App\Http\Controllers\Admin\TalentRequestController::class, 'assign'])->name('assign');
+    Route::patch('/{talentRequest}/complete', [App\Http\Controllers\Admin\TalentRequestController::class, 'markAsCompleted'])->name('complete'); // Mark as completed
 });
 
 // Admin Competency Management

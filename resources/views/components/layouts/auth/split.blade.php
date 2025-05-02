@@ -5,8 +5,15 @@
     </head>
     <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
         <div class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
-            <div class="bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-e dark:border-neutral-800">
-                <div class="absolute inset-0 bg-neutral-900"></div>
+            {{-- Add your image to the public/images directory --}}
+            {{-- Then update the path below, e.g., 'images/your-background.jpg' --}}
+            <div 
+                class="bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-e dark:border-neutral-800"
+                style="background-image: url('{{ asset('images/Login_page.svg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"
+            >
+                {{-- Removed the solid background div: <div class="absolute inset-0 bg-neutral-900"></div> --}}
+                {{-- Optional: Add a semi-transparent overlay if needed for text readability --}}
+                {{-- <div class="absolute inset-0 bg-black opacity-50"></div> --}}
                 <a href="{{ route('home') }}" class="relative z-20 flex items-center text-lg font-medium" wire:navigate>
                     <span class="flex h-10 w-10 items-center justify-center rounded-md">
                         <x-app-logo-icon class="me-2 h-7 fill-current text-white" />
