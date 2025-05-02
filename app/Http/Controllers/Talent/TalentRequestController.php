@@ -18,7 +18,7 @@ class TalentRequestController extends Controller
         $talent = Auth::user();
         $requests = $talent->receivedRequests()
                            ->where('status', 'pending_talent') // Only show requests ready for talent review
-                           ->with('user') // Eager load the requesting user
+                           ->with('requestingUser') // Eager load the requesting user
                            ->latest()
                            ->paginate(10);
 
@@ -43,7 +43,7 @@ class TalentRequestController extends Controller
              abort(404); // Or redirect with an error
         }
 
-        $talentRequest->load('user'); // Load the requesting user details
+        $talentRequest->load('requestingUser'); // Load the requesting user details
 
         return view('talent.requests.show', compact('talentRequest'));
     }
