@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -25,18 +26,25 @@ new #[Layout('components.layouts.auth')] class extends Component {
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
-            'phone_number' => ['nullable', 'string', 'max:20'], // Add validation for phone number (optional)
-            'role' => ['required', 'string', 'in:admin,user,talent'], // Add validation for role, including 'talent'
+            'phone_number' => ['required', 'string', 'max:20'], // Make phone number required
+            'role' => ['required', 'string', 'in:user,talent'], // Restrict to non-admin roles
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
 
+        $role = Role::where('name', $validated['role'])->first();
+        
         event(new Registered(($user = User::create($validated))));
+        
+        // Attach the selected role
+        if($role) {
+            $user->roles()->attach($role);
+        }
 
         Auth::login($user);
 
         // Redirect based on role after registration
-        if ($user->role === 'admin') {
+        if ($user->hasRole('admin')) {
             $this->redirect(route('admin.dashboard'), navigate: true);
         } elseif ($user->role === 'talent') {
             // Assuming talent dashboard route is named 'talent.dashboard'
@@ -79,11 +87,22 @@ new #[Layout('components.layouts.auth')] class extends Component {
         <!-- Phone Number -->
         <flux:input
             wire:model="phone_number"
-            :label="__('Phone Number (Optional)')"
+            :label="__('Phone Number')"
             type="tel"
+            required
             autocomplete="tel"
             placeholder="e.g., +6281234567890"
         />
+
+        <!-- Role Selection -->
+        <flux:select
+            wire:model="role"
+            :label="__('Account Type')"
+            required
+        >
+            <option value="user">{{ __('user') }}</option>
+            <option value="talent">{{ __('talent') }}</option>
+        </flux:select>
 
         <!-- Password -->
         <flux:input

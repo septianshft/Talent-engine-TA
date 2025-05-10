@@ -67,7 +67,8 @@ class User extends Authenticatable
      */
     public function competencies(): BelongsToMany
     {
-        return $this->belongsToMany(Competency::class, 'competency_user');
+        return $this->belongsToMany(Competency::class, 'competency_user')
+                    ->withPivot('proficiency_level');
     }
 
     /**

@@ -193,9 +193,7 @@ $closeCompetencyModal = function() {
                                     {{ strtoupper(substr($user->name, 0, 1)) }}
                                 </div>
                                 <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $user->name }}</div>
-                                    {{-- Optional: Add user ID or other info --}}
-                                    {{-- <div class="text-xs text-gray-500 dark:text-gray-400">ID: {{ $user->id }}</div> --}}
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $user->name }}</div>                              
                                 </div>
                             </div>
                         </td>
@@ -215,12 +213,16 @@ $closeCompetencyModal = function() {
                                 @php $competencies = $user->competencies; $limit = 3; @endphp
                                 <div class="flex flex-wrap items-center gap-1">
                                     @foreach ($competencies->take($limit) as $competency)
-                                        <span class="px-2.5 py-1 inline-flex text-xs leading-4 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-800/30 dark:text-purple-400">
-                                            {{ $competency->name }} ({{ $competency->pivot->proficiency_level }})
+                                        <span class="px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-md border border-purple-300 dark:border-purple-700 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/50 dark:hover:bg-purple-800/60 text-purple-700 dark:text-purple-300 transition-colors cursor-default whitespace-nowrap">
+                                            {{ $competency->name }}&nbsp;({{ $competency->pivot->proficiency_level }})
                                         </span>
                                     @endforeach
                                     @if ($competencies->count() > $limit)
-                                        <button wire:click="openCompetencyModal({{ $user->id }})" class="px-2.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-800/30 rounded-full hover:bg-blue-200 dark:hover:bg-blue-700/50 transition-colors">
+                                        <button wire:click="openCompetencyModal({{ $user->id }})" 
+                                                class="px-2.5 py-1 text-xs font-semibold rounded-full transition-colors 
+                                                       bg-gray-200 dark:bg-gray-600 text-blue-700 dark:text-blue-300 
+                                                       hover:bg-gray-300 dark:hover:bg-gray-500 
+                                                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
                                             +{{ $competencies->count() - $limit }} more
                                         </button>
                                     @endif

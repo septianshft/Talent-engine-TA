@@ -23,7 +23,15 @@ class TalentRequestController extends Controller
         }
 
         $requests = $query->paginate(15);
-        $statuses = ['pending_admin', 'pending_talent', 'approved', 'rejected_admin', 'rejected_talent', 'completed']; // Define possible statuses for filtering
+        // Define possible statuses as an associative array for filtering and display
+        $statuses = [
+            'pending_admin' => 'Pending Admin',
+            'pending_talent' => 'Pending Talent',
+            'approved' => 'Approved',
+            'rejected_admin' => 'Rejected (Admin)',
+            'rejected_talent' => 'Rejected (Talent)',
+            'completed' => 'Completed'
+        ];
 
         return view('admin.talent-requests.index', compact('requests', 'statuses'));
     }

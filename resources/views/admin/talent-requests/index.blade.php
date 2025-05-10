@@ -128,7 +128,7 @@
         <!-- Pagination -->
         @if ($requests->hasPages())
         <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-            {{ $requests->appends(request()->query())->links() }} {{-- Append filter query string to pagination --}}
+            {{ $requests->appends(request()->query())->links() }} 
         </div>
         @endif
     </div>

@@ -146,6 +146,7 @@
 
         {{ $slot }}
 
+        @stack('scripts') {{-- Add stack for page-specific scripts --}}
         @fluxScripts
     </body>
 </html>

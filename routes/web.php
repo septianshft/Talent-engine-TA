@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CompetencyController;
 use App\Http\Controllers\User\TalentRequestController as UserTalentRequestController;
 use App\Http\Controllers\Talent\TalentRequestController as TalentTalentRequestController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -24,7 +25,7 @@ Route::middleware(['auth', 'verified', 'role:user'])->prefix('requests')->name('
 });
 
 // Admin Dashboard Route
-Route::view('admin/dashboard', 'admin.dashboard') // Assuming you have an admin.dashboard view
+Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'role:admin'])
     ->name('admin.dashboard');
 

@@ -6,7 +6,6 @@
     <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
         <div class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
             {{-- Add your image to the public/images directory --}}
-            {{-- Then update the path below, e.g., 'images/your-background.jpg' --}}
             <div 
                 class="bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-e dark:border-neutral-800"
                 style="background-image: url('{{ asset('images/Login_page.svg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"

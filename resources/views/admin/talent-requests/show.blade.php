@@ -131,15 +131,14 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-lg font-medium text-indigo-600 dark:text-indigo-400 truncate">{{ $talent->name }}</p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ $talent->email }}</p>
-                                    {{-- Display relevant competencies if needed --}}
-                                    {{-- <div class="mt-2 flex flex-wrap gap-2">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ $talent->email }}</p>                
+                                    <div class="mt-2 flex flex-wrap gap-2">
                                         @foreach ($talent->competencies as $competency)
                                             <span class="px-2 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full bg-blue-100 dark:bg-blue-800/50 text-blue-800 dark:text-blue-300">
                                                 {{ $competency->name }} (Level: {{ $competency->pivot->proficiency_level }})
                                             </span>
-                                        @endforeach
-                                    </div> --}}
+                                        @endforeach 
+                                    </div>
                                 </div>
                                 <div class="ml-4 text-right">
                                     <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-800/50 text-green-800 dark:text-green-300">
