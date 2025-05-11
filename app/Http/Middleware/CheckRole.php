@@ -23,6 +23,7 @@ class CheckRole
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
+        $user->load('roles'); // Explicitly load roles relationship
 
         // Check if the user has the required role
         if (!$user->hasRole($role)) {

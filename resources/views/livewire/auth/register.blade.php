@@ -32,21 +32,27 @@ new #[Layout('components.layouts.auth')] class extends Component {
 
         $validated['password'] = Hash::make($validated['password']);
 
-        $role = Role::where('name', $validated['role'])->first();
-        
-        event(new Registered(($user = User::create($validated))));
-        
+        // Separate role from user data
+        $roleName = $validated['role'];
+        unset($validated['role']); // Remove role from data to be passed to User::create()
+
+        $user = User::create($validated);
+        event(new Registered($user));
+
         // Attach the selected role
-        if($role) {
-            $user->roles()->attach($role);
+        $roleModel = Role::where('name', $roleName)->first();
+        if($roleModel) {
+            $user->roles()->attach($roleModel);
         }
 
         Auth::login($user);
 
         // Redirect based on role after registration
+        // Admin role is not selectable during registration, so this check is likely redundant here
+        // but kept for consistency if logic changes.
         if ($user->hasRole('admin')) {
             $this->redirect(route('admin.dashboard'), navigate: true);
-        } elseif ($user->role === 'talent') {
+        } elseif ($user->hasRole('talent')) { // Corrected to use hasRole()
             // Assuming talent dashboard route is named 'talent.dashboard'
             // Make sure to define this route in routes/web.php
             $this->redirect(route('talent.dashboard'), navigate: true);
