@@ -1,9 +1,12 @@
 <?php
 
-use function Livewire\Volt\{state, rules, computed};
+use function Livewire\Volt\{state, rules, computed, uses};
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Role;
+use Livewire\WithPagination;
+
+uses([WithPagination::class]); // Add this for $this->resetPage()
 
 state([
     'showCompetencyModal' => false,
@@ -18,7 +21,24 @@ state([
         'password' => '',
         'role' => 'user',
     ],
+    'sortField' => 'name', // Default sort field
+    'sortDirection' => 'asc', // Default sort direction
+    'filterRole' => 'all', // 'all', 'user', 'talent'
 ]);
+
+$setFilterRole = function (string $role) {
+    $this->filterRole = $role;
+    $this->resetPage(); // Reset pagination when filter changes
+};
+
+$sortBy = function (string $field) {
+    if ($this->sortField === $field) {
+        $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        $this->sortDirection = 'asc';
+    }
+    $this->sortField = $field;
+};
 
 $resetForm = function() {
     $this->form = [
@@ -31,12 +51,34 @@ $resetForm = function() {
 };
 
 $users = computed(function() {
-    // Fetch users who do not have the 'admin' role
-    return User::whereDoesntHave('roles', function ($query) {
-        $query->where('name', 'admin');
-    })
-    ->with(['roles', 'competencies']) // Eager load roles and competencies
-    ->paginate(10);
+    $query = User::query()
+        ->whereDoesntHave('roles', function ($q) {
+            $q->where('name', 'admin'); // Always exclude admins
+        })
+        ->with(['roles', 'competencies']);
+
+    // Apply role filter
+    if ($this->filterRole !== 'all') {
+        $query->whereHas('roles', function ($q) {
+            $q->where('name', $this->filterRole);
+        });
+    }
+
+    // Apply sorting
+    // Sorting by 'role' name directly is complex with Eloquent's `with` and `paginate`
+    // when a user might have multiple roles or no roles.
+    // The current sort logic defaults to 'name' if 'role' is chosen for sortField.
+    // This is acceptable if we are filtering by a single role type.
+    $actualSortField = $this->sortField;
+    if ($this->sortField === 'role' && $this->filterRole === 'all') {
+        // If filtering all users and trying to sort by role, default to name sort
+        // as sorting by a potentially multiple/absent role name is tricky.
+        $actualSortField = 'name';
+    }
+
+    $query->orderBy($actualSortField, $this->sortDirection);
+
+    return $query->paginate(10);
 });
 
 $validate = [
@@ -146,14 +188,15 @@ $closeCompetencyModal = function() {
 };
 
 ?>
-<div class="min-h-screen bg-white-50 dark:bg-gray-900 p-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
+<div> <!-- New single root wrapper -->
+    <div class="min-h-screen bg-white-50 dark:bg-gray-900 p-6">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
         <div class="text-left">
             <h1 class="text-3xl font-bold text-black-900 dark:text-white">👥 User Management</h1>
             <p class="mt-1 text-black-600 dark:text-gray-400">Manage your platform users efficiently</p>
         </div>
-        <button wire:click="$set('showModal', true)" 
+        <button wire:click="$set('showModal', true)"
                 class="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -171,17 +214,54 @@ $closeCompetencyModal = function() {
                 </span>
             </div>
             {{-- Optional: Add search/filter controls here --}}
+            </div>
+            <div class="flex space-x-2 p-4">
+                <button wire:click="setFilterRole('all')"
+                        class="px-4 py-2 text-sm font-medium rounded-md {{ $filterRole === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600' }}">
+                    All Users
+                </button>
+                <button wire:click="setFilterRole('talent')"
+                        class="px-4 py-2 text-sm font-medium rounded-md {{ $filterRole === 'talent' ? 'bg-green-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600' }}">
+                    Talents Only
+                </button>
+                <button wire:click="setFilterRole('user')"
+                        class="px-4 py-2 text-sm font-medium rounded-md {{ $filterRole === 'user' ? 'bg-purple-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600' }}">
+                    Users Only
+                </button>
+            </div>
         </div>
 
         <div class="overflow-x-auto"> {{-- Added container for horizontal scroll on small screens --}}
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700/50">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/4">User</th> {{-- Adjusted padding/text size --}}
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/4">Email</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/6">Role</th>
+                        <th scope="col" wire:click="sortBy('name')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/4">
+                            <div class="flex items-center">
+                                User
+                                @if ($sortField === 'name')
+                                    <span class="ml-1">@if ($sortDirection === 'asc') &uarr; @else &darr; @endif</span>
+                                @endif
+                            </div>
+                        </th>
+                        <th scope="col" wire:click="sortBy('email')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/4">
+                            <div class="flex items-center">
+                                Email
+                                @if ($sortField === 'email')
+                                    <span class="ml-1">@if ($sortDirection === 'asc') &uarr; @else &darr; @endif</span>
+                                @endif
+                            </div>
+                        </th>
+                        <th scope="col" wire:click="sortBy('role')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/6">
+                            <div class="flex items-center">
+                                Role
+                                @if ($sortField === 'role')
+                                    {{-- Note: Actual sorting for 'role' defaults to 'name' in current PHP logic --}}
+                                    <span class="ml-1">@if ($sortDirection === 'asc') &uarr; @else &darr; @endif</span>
+                                @endif
+                            </div>
+                        </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/3">Competencies</th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Actions</th> {{-- Adjusted min-width --}}
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -193,7 +273,7 @@ $closeCompetencyModal = function() {
                                     {{ strtoupper(substr($user->name, 0, 1)) }}
                                 </div>
                                 <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $user->name }}</div>                              
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $user->name }}</div>
                                 </div>
                             </div>
                         </td>
@@ -202,8 +282,8 @@ $closeCompetencyModal = function() {
                             @php
                                 $roleName = $user->roles->first()?->name ?? 'user';
                             @endphp
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                {{ $roleName === 'talent' ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400' : 
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {{ $roleName === 'talent' ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400' :
                                 'bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-400' }}">
                                 {{ ucfirst($roleName) }}
                             </span>
@@ -218,10 +298,10 @@ $closeCompetencyModal = function() {
                                         </span>
                                     @endforeach
                                     @if ($competencies->count() > $limit)
-                                        <button wire:click="openCompetencyModal({{ $user->id }})" 
-                                                class="px-2.5 py-1 text-xs font-semibold rounded-full transition-colors 
-                                                       bg-gray-200 dark:bg-gray-600 text-blue-700 dark:text-blue-300 
-                                                       hover:bg-gray-300 dark:hover:bg-gray-500 
+                                        <button wire:click="openCompetencyModal({{ $user->id }})"
+                                                class="px-2.5 py-1 text-xs font-semibold rounded-full transition-colors
+                                                       bg-gray-200 dark:bg-gray-600 text-blue-700 dark:text-blue-300
+                                                       hover:bg-gray-300 dark:hover:bg-gray-500
                                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
                                             +{{ $competencies->count() - $limit }} more
                                         </button>
@@ -265,7 +345,7 @@ $closeCompetencyModal = function() {
 
     <!-- Create/Edit Modal -->
     @if($showModal)
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300" 
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300"
          x-data="{ show: @entangle('showModal') }"
          x-show="show"
          x-transition:enter="ease-out duration-300"
@@ -274,7 +354,7 @@ $closeCompetencyModal = function() {
          x-transition:leave="ease-in duration-200"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
-        
+
         <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg transform transition-all duration-300"
              x-transition:enter="ease-out duration-300"
              x-transition:enter-start="opacity-0 scale-95"
@@ -282,7 +362,7 @@ $closeCompetencyModal = function() {
              x-transition:leave="ease-in duration-200"
              x-transition:leave-start="opacity-100 scale-100"
              x-transition:leave-end="opacity-0 scale-95">
-            
+
             <!-- Header -->
             <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                 <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -305,7 +385,7 @@ $closeCompetencyModal = function() {
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             </span>
-                            <input id="name" type="text" wire:model="form.name" 
+                            <input id="name" type="text" wire:model="form.name"
                                    class="form-input pl-10 @error('form.name') form-input-error @enderror"
                                    placeholder="Enter user's full name">
                         </div>
@@ -319,7 +399,7 @@ $closeCompetencyModal = function() {
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206"></path></svg>
                             </span>
-                            <input id="email" type="email" wire:model="form.email" 
+                            <input id="email" type="email" wire:model="form.email"
                                    class="form-input pl-10 @error('form.email') form-input-error @enderror"
                                    placeholder="e.g., user@example.com">
                         </div>
@@ -334,7 +414,7 @@ $closeCompetencyModal = function() {
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                             </span>
-                            <input id="password" type="password" wire:model="form.password" 
+                            <input id="password" type="password" wire:model="form.password"
                                    class="form-input pl-10 @error('form.password') form-input-error @enderror"
                                    placeholder="Enter a secure password (min. 8 characters)">
                         </div>
@@ -394,7 +474,7 @@ $closeCompetencyModal = function() {
 
             <div class="p-6 space-y-6">
                 <p class="text-gray- 600 dark:text-gray-300">Are you sure you want to delete user <strong class="font-medium">{{ $userToDelete?->name }}</strong>? This action cannot be undone.</p>
-                
+
                 <div class="flex justify-end space-x-3">
                     <button wire:click="closeDeleteModal" class="btn-secondary">Cancel</button>
                     <button wire:click="deleteUser " class="btn-danger">Delete</button>
@@ -460,22 +540,22 @@ $closeCompetencyModal = function() {
 
     <style>
         .btn-primary {
-            @apply px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 
-                   text-white font-semibold rounded-xl shadow-sm transition-all duration-200 transform 
-                   hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
+            @apply px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600
+                   text-white font-semibold rounded-xl shadow-sm transition-all duration-200 transform
+                   hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                    dark:focus:ring-offset-gray-900 flex items-center;
         }
 
         .btn-secondary {
-            @apply px-6 py-2.5 bg-transparent border border-gray-300 dark:border-gray-600 
-                   text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 
-                   font-semibold rounded-lg 
+            @apply px-6 py-2.5 bg-transparent border border-gray-300 dark:border-gray-600
+                   text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700
+                   font-semibold rounded-lg
                    transition-colors duration-200;
         }
 
         .btn-danger {
-            @apply px-6 py-2.5 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white 
-                   uppercase tracking-widest hover:bg-red-700 active:bg-red-800 focus:outline-none 
+            @apply px-6 py-2.5 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white
+                   uppercase tracking-widest hover:bg-red-700 active:bg-red-800 focus:outline-none
                    focus:border-red-800 focus:ring ring-red-300 disabled:opacity-25 transition ease-in-out duration-150;
         }
 
@@ -488,7 +568,7 @@ $closeCompetencyModal = function() {
         }
 
         .form-input {
-            @apply w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 
+            @apply w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900
                    text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500
                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none
                    transition-all duration-200;
@@ -507,4 +587,5 @@ $closeCompetencyModal = function() {
             @apply bg-gray-800 border-gray-700;
         }
     </style>
-</div>
+    </div> <!-- This is the closing tag of the main root div -->
+</div> <!-- Closing tag for the new single root wrapper -->

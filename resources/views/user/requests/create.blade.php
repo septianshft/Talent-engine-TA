@@ -31,7 +31,7 @@
                         Required Competencies & Proficiency Level <span class="text-red-500">*</span>
                     </label>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Select required competencies and specify the minimum proficiency level needed for each.</p>
-                    <div class="space-y-3 max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-4 bg-gray-50 dark:bg-gray-700/50">
+                    <div class="space-y-3 max-h-72 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-4 bg-gray-50 dark:bg-gray-700/50" id="competenciesList">
                         @php
                             $proficiencyLevels = [
                                 1 => 'Completion',
@@ -39,40 +39,78 @@
                                 3 => 'Advanced',
                                 4 => 'Expert',
                             ];
+                            $weights = [
+                                1 => '1 (Lowest)',
+                                2 => '2',
+                                3 => '3 (Medium)',
+                                4 => '4',
+                                5 => '5 (Highest)',
+                            ];
+                            // Helper for old data, assuming competencies might be submitted as an indexed array
+                            $oldCompetencies = collect(old('competencies', []));
                         @endphp
-                        @forelse ($competencies as $competency)
-                            <div class="flex items-center justify-between space-x-4">
-                                <div class="flex items-center flex-grow">
-                                    <input type="checkbox"
-                                           id="competency_{{ $competency->id }}"
-                                           name="competencies_selected[]" {{-- Helper to know which competencies were considered --}}
-                                           value="{{ $competency->id }}"
-                                           class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
-                                           {{ (is_array(old('competencies')) && array_key_exists($competency->id, old('competencies'))) ? 'checked' : '' }}>
-                                    <label for="competency_{{ $competency->id }}" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300 flex-grow">
-                                        {{ $competency->name }}
-                                    </label>
+                        @forelse ($competencies as $index => $competency)
+                            @php
+                                $oldCompData = $oldCompetencies->firstWhere('id', (string)$competency->id) ?? $oldCompetencies->firstWhere('id', $competency->id);
+                                $isChecked = $oldCompData !== null;
+                                $oldLevel = $oldCompData['level'] ?? '';
+                                $oldWeight = $oldCompData['weight'] ?? '';
+                            @endphp
+                            <div class="competency-item p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 shadow-sm" data-id="{{ $competency->id }}">
+                                <div class="flex items-center justify-between space-x-3">
+                                    <div class="flex items-center flex-grow">
+                                        <input type="checkbox"
+                                               id="competency_checkbox_{{ $competency->id }}"
+                                               class="competency-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
+                                               value="{{ $competency->id }}"
+                                               {{ $isChecked ? 'checked' : '' }}>
+                                        <label for="competency_checkbox_{{ $competency->id }}" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300 flex-grow">
+                                            {{ $competency->name }}
+                                        </label>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <select data-type="level"
+                                                class="competency-level shadow-sm appearance-none border rounded py-1 px-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 leading-tight focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-36 @error('competencies.'.$index.'.level') border-red-500 @enderror"
+                                                {{ !$isChecked ? 'disabled' : '' }}>
+                                            <option value="">-- Level --</option>
+                                            @foreach ($proficiencyLevels as $value => $label)
+                                                <option value="{{ $value }}" {{ (string)$oldLevel === (string)$value ? 'selected' : '' }}>
+                                                    {{ $label }} ({{ $value }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <select data-type="weight"
+                                                class="competency-weight shadow-sm appearance-none border rounded py-1 px-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 leading-tight focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-36 @error('competencies.'.$index.'.weight') border-red-500 @enderror"
+                                                {{ !$isChecked ? 'disabled' : '' }}>
+                                            <option value="">-- Weight --</option>
+                                            @foreach ($weights as $value => $label)
+                                                <option value="{{ $value }}" {{ (string)$oldWeight === (string)$value ? 'selected' : '' }}>
+                                                    {{ $label }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
-                                <select name="competencies[{{ $competency->id }}]" {{-- Send as associative array --}}
-                                        class="shadow-sm appearance-none border rounded py-1 px-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 leading-tight focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-40 @error('competencies.'.$competency->id) border-red-500 @enderror">
-                                    <option value="">-- Select Level --</option>
-                                    @foreach ($proficiencyLevels as $value => $label)
-                                        <option value="{{ $value }}" {{ old('competencies.'.$competency->id) == $value ? 'selected' : '' }}>
-                                            {{ $label }} ({{ $value }})
-                                        </option>
-                                    @endforeach
-                                </select>
+                                @error('competencies.'.$index.'.level')
+                                    <p class="text-red-500 text-xs italic mt-1 ml-7">{{ $message }}</p>
+                                @enderror
+                                @error('competencies.'.$index.'.weight')
+                                    <p class="text-red-500 text-xs italic mt-1 ml-7">{{ $message }}</p>
+                                @enderror
                             </div>
-                            @error('competencies.'.$competency->id)
-                                <p class="text-red-500 text-xs italic ml-7">{{ $message }}</p>
-                            @enderror
                         @empty
                             <p class="text-sm text-gray-500 dark:text-gray-400">No competencies available.</p>
                         @endforelse
                     </div>
-                    @error('competencies') {{-- General error if no competencies selected --}}
+                    {{-- Hidden container for inputs that will be submitted --}}
+                    <div id="competencies-form-data-container"></div>
+
+                    @error('competencies') {{-- General error if no competencies selected or configured --}}
                         <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
                     @enderror
+                     @if ($errors->has('competencies.*.id') || $errors->has('competencies.*.level') || $errors->has('competencies.*.weight'))
+                        <p class="text-red-500 text-xs italic mt-2">Please ensure all selected competencies have a valid level and weight.</p>
+                    @endif
                 </div>
 
                 {{-- Request Details --}}
@@ -100,4 +138,112 @@
         </div>
     </div>
 </div>
+    </div>
+</div>
 </x-layouts.app>
+
+<script>
+    // Removed the [REQUEST_FORM_JS_BASIC_TEST] and [REQUEST_FORM_JS_INLINE_TEST] logs for clarity
+    // This script is now directly part of create.blade.php, not pushed.
+
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('[REQUEST_FORM_JS] DOM fully loaded and parsed (inline script)');
+        const competenciesList = document.getElementById('competenciesList');
+        const form = competenciesList ? competenciesList.closest('form') : null;
+        const formDataContainer = document.getElementById('competencies-form-data-container');
+
+        if (!competenciesList) {
+            console.error('[REQUEST_FORM_JS] Could not find competenciesList element');
+            return;
+        }
+        if (!form) {
+            console.error('[REQUEST_FORM_JS] Could not find form element associated with competenciesList');
+            return;
+        }
+        if (!formDataContainer) {
+            console.error('[REQUEST_FORM_JS] Could not find formDataContainer element');
+            return;
+        }
+
+        function initializeCompetencyItem(item) {
+            const checkbox = item.querySelector('.competency-checkbox');
+            if (!checkbox) return;
+
+            const selects = item.querySelectorAll('select');
+            selects.forEach(select => {
+                select.disabled = !checkbox.checked;
+            });
+
+            checkbox.addEventListener('change', function () {
+                console.log('[REQUEST_FORM_JS] Checkbox changed:', this.id, 'Checked:', this.checked);
+                selects.forEach(select => {
+                    select.disabled = !this.checked;
+                    if (!this.checked) {
+                        select.value = ''; // Reset if unchecked
+                    }
+                });
+            });
+        }
+
+        // Initialize existing items on page load
+        document.querySelectorAll('.competency-item').forEach(item => {
+            initializeCompetencyItem(item);
+        });
+        console.log('[REQUEST_FORM_JS] Initialized existing competency items.');
+
+
+        // Handling form submission to gather data
+        form.addEventListener('submit', function (event) {
+            console.log('[REQUEST_FORM_JS] Form submission triggered');
+            formDataContainer.innerHTML = ''; // Clear previous hidden inputs
+            let competencyIndex = 0;
+
+            document.querySelectorAll('.competency-item').forEach(item => {
+                const checkbox = item.querySelector('.competency-checkbox');
+                if (checkbox && checkbox.checked) {
+                    const competencyId = item.dataset.id;
+                    const levelSelect = item.querySelector('.competency-level');
+                    const weightSelect = item.querySelector('.competency-weight');
+
+                    console.log('[REQUEST_FORM_JS] Processing checked competency ID:', competencyId, 'Level val:', levelSelect.value, 'Weight val:', weightSelect.value);
+
+                    if (competencyId && levelSelect && weightSelect && levelSelect.value && weightSelect.value) { // Ensure selects have values
+                        let idInput = document.createElement('input');
+                        idInput.type = 'hidden';
+                        idInput.name = `competencies[${competencyIndex}][id]`;
+                        idInput.value = competencyId;
+                        formDataContainer.appendChild(idInput);
+
+                        let levelInput = document.createElement('input');
+                        levelInput.type = 'hidden';
+                        levelInput.name = `competencies[${competencyIndex}][level]`;
+                        levelInput.value = levelSelect.value;
+                        formDataContainer.appendChild(levelInput);
+
+                        let weightInput = document.createElement('input');
+                        weightInput.type = 'hidden';
+                        weightInput.name = `competencies[${competencyIndex}][weight]`;
+                        weightInput.value = weightSelect.value;
+                        formDataContainer.appendChild(weightInput);
+
+                        competencyIndex++;
+                    } else {
+                        console.warn('[REQUEST_FORM_JS] Missing data or select value for checked competency ID:', competencyId);
+                        // Optionally, you could prevent form submission here if a checked item is not fully configured,
+                        // though backend validation should also catch this.
+                        // event.preventDefault(); // Example: stop submission
+                        // alert('Please ensure all selected competencies have a level and weight.');
+                    }
+                }
+            });
+            console.log('[REQUEST_FORM_JS] Prepared hidden inputs for', competencyIndex, 'competencies.');
+            if (competencyIndex === 0 && document.querySelector('.competency-checkbox:checked')) {
+                // This case means checkboxes were checked but selects were not filled.
+                // Backend validation for min:1 on the competencies array will handle if no items are processed.
+                // If items were checked but not valid, specific backend validation for level/weight will trigger.
+                console.warn('[REQUEST_FORM_JS] No valid competencies were processed for submission, though some might be checked.');
+            }
+        });
+        console.log('[REQUEST_FORM_JS] Initialization complete (inline script)');
+    });
+</script>

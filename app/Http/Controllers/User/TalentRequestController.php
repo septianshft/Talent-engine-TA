@@ -40,54 +40,48 @@ class TalentRequestController extends Controller
      */
     public function store(Request $request)
     {
-        // Define proficiency levels for validation
+        // Define proficiency levels and weights for validation
         $proficiencyLevels = [1, 2, 3, 4]; // Completion, Intermediate, Advanced, Expert
+        $weights = [1, 2, 3, 4, 5]; // Example: 1 (Least Important) to 5 (Most Important)
 
         // Validate the request
+        // Assumes 'competencies' is an array of objects, e.g., [{id: 1, level: 3, weight: 5}, ...]
         $validated = $request->validate([
-            // Keep 'competencies' required to ensure the array exists, even if empty initially from the form perspective
-            'competencies' => 'present|array', 
-            // Make proficiency level nullable, we'll filter empty ones later
-            'competencies.*' => ['nullable', 'integer', 'in:' . implode(',', $proficiencyLevels)], 
+            'competencies' => 'required|array|min:1', // Must select at least one competency
+            'competencies.*.id' => 'required|integer|exists:competencies,id',
+            'competencies.*.level' => ['required', 'integer', 'in:' . implode(',', $proficiencyLevels)],
+            'competencies.*.weight' => ['required', 'integer', 'in:' . implode(',', $weights)],
             'details' => 'required|string|max:1000',
         ], [
-            'competencies.required' => 'Please select at least one competency and its required proficiency level.',
-            'competencies.*.required' => 'Please select a proficiency level for each chosen competency.',
-            'competencies.*.in' => 'Invalid proficiency level selected.',
+            'competencies.required' => 'Please select and configure at least one competency.',
+            'competencies.min' => 'Please select and configure at least one competency.',
+            'competencies.*.id.required' => 'A competency ID is missing for one of your selections.',
+            'competencies.*.id.exists' => 'An invalid competency was selected.',
+            'competencies.*.level.required' => 'Please select a proficiency level for each chosen competency.',
+            'competencies.*.level.in' => 'Invalid proficiency level selected for a competency.',
+            'competencies.*.weight.required' => 'Please set a weight for each chosen competency.',
+            'competencies.*.weight.in' => 'Invalid weight selected for a competency.',
         ]);
 
-        // Create the talent request (without talent_id initially)
+        // Create the talent request
         $talentRequest = TalentRequest::create([
             'user_id' => Auth::id(),
-            // 'talent_id' will be assigned later, perhaps by admin or DSS
             'details' => $validated['details'],
-            'status' => 'pending_admin', // Initial status, admin needs to review/assign
+            'status' => 'pending_admin',
         ]);
 
-        // Prepare data for attaching competencies with proficiency levels
+        // Prepare data for attaching competencies with proficiency levels and weights
         $competenciesToAttach = [];
-        // Filter out competencies where no proficiency level was selected
-        $selectedCompetencies = array_filter($validated['competencies'] ?? [], function($level) {
-            return !is_null($level) && $level !== '';
-        });
-
-        // Ensure at least one competency was actually selected with a level
-        if (empty($selectedCompetencies)) {
-            // Redirect back with an error if no competencies were properly selected
-            return back()->withErrors(['competencies' => 'Please select at least one competency and specify its required proficiency level.'])->withInput();
+        foreach ($validated['competencies'] as $compData) {
+            $competenciesToAttach[$compData['id']] = [
+                'required_proficiency_level' => $compData['level'],
+                'weight' => $compData['weight'] // Add weight here
+            ];
         }
 
-        foreach ($selectedCompetencies as $competencyId => $proficiencyLevel) {
-            // Check if competency exists (optional, but good practice)
-            if (Competency::find($competencyId)) { 
-                $competenciesToAttach[$competencyId] = ['required_proficiency_level' => $proficiencyLevel];
-            }
-        }
-
-        // Attach the required competencies with their proficiency levels
-        if (!empty($competenciesToAttach)) {
-            $talentRequest->competencies()->attach($competenciesToAttach);
-        }
+        // Attach the required competencies with their proficiency levels and weights
+        // The 'min:1' validation for 'competencies' array ensures $competenciesToAttach will not be empty if validation passes.
+        $talentRequest->competencies()->attach($competenciesToAttach);
 
         return redirect()->route('user.requests.index')->with('success', 'Talent request submitted successfully. It will be reviewed by an administrator.');
     }

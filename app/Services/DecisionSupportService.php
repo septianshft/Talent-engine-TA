@@ -22,18 +22,22 @@ class DecisionSupportService
     {
         Log::info('[DSS] Processing Request ID: ' . $talentRequest->id);
 
-        // 1. Get required competencies and proficiency levels from the request
-        $requiredCompetencies = $talentRequest->competencies()->pluck('required_proficiency_level', 'competency_id');
-        Log::info('[DSS] Required Competencies:', $requiredCompetencies->toArray());
+        // 1. Get required competencies, proficiency levels, and weights from the request
+        // The TalentRequest model's 'competencies' relationship should have `withPivot('required_proficiency_level', 'weight')`
+        $requiredCompetenciesData = $talentRequest->competencies->map(function ($competency) {
+            return (object) [ // Cast to object for easier access like $reqComp->id
+                'id' => $competency->id,
+                'required_proficiency_level' => $competency->pivot->required_proficiency_level,
+                'weight' => $competency->pivot->weight,
+            ];
+        });
 
-        if ($requiredCompetencies->isEmpty()) {
+        Log::info('[DSS] Required Competencies (ID, Level, Weight):', $requiredCompetenciesData->toArray());
+
+        if ($requiredCompetenciesData->isEmpty()) {
             Log::info('[DSS] No competencies required, returning empty collection.');
-            return collect(); // No competencies required, return empty collection
+            return collect();
         }
-
-        // 2. Find talents who have ALL the required competencies at or above the required level
-        // This query is complex. We need users who have a competency_user record for *each* required competency
-        // where their proficiency_level meets or exceeds the required level.
 
         // 2. Find talents who have ALL the required competencies at or above the required level
         $potentialTalentsQuery = User::whereHas('roles', function ($query) {
@@ -41,10 +45,10 @@ class DecisionSupportService
         });
 
         // Chain a whereHas condition for each required competency
-        foreach ($requiredCompetencies as $competencyId => $requiredLevel) {
-            $potentialTalentsQuery->whereHas('competencies', function ($query) use ($competencyId, $requiredLevel) {
-                $query->where('competencies.id', $competencyId)
-                      ->where('competency_user.proficiency_level', '>=', $requiredLevel);
+        foreach ($requiredCompetenciesData as $reqComp) {
+            $potentialTalentsQuery->whereHas('competencies', function ($query) use ($reqComp) {
+                $query->where('competencies.id', $reqComp->id)
+                      ->where('competency_user.proficiency_level', '>=', $reqComp->required_proficiency_level);
             });
         }
 
@@ -57,42 +61,40 @@ class DecisionSupportService
         }
 
         // Eager load the relevant competencies for scoring after filtering
-        $potentialTalents = $potentialTalentsQuery->with(['competencies' => function ($query) use ($requiredCompetencies) {
-            $query->whereIn('competencies.id', $requiredCompetencies->keys());
+        $requiredCompetencyIds = $requiredCompetenciesData->pluck('id')->all();
+        $potentialTalents = $potentialTalentsQuery->with(['competencies' => function ($query) use ($requiredCompetencyIds) {
+            $query->whereIn('competencies.id', $requiredCompetencyIds); // Load only the competencies relevant to the request
         }])->get();
 
         Log::info('[DSS] Found ' . $potentialTalents->count() . ' potential talents after initial query.');
 
-        // 3. Score the potential talents (Placeholder: Simple Additive Weighting - SAW)
-        // For SAW, we might need weights for each competency (assuming equal weight for now)
-        // Score = Sum(talent_proficiency / max_proficiency * weight)
-        // Max proficiency is typically 4 (Expert)
-        $maxProficiency = 4;
-        $rankedTalents = $potentialTalents->map(function ($talent) use ($requiredCompetencies, $maxProficiency) {
-            $score = 0;
-            $matchedCompetenciesCount = 0;
+        // 3. Score the potential talents using weights
+        // Max proficiency is typically 4 (Expert), but not directly used in this weighted sum if weights handle relative importance.
+        // $maxProficiency = 4; // Kept for reference if normalization is added later
 
-            foreach ($requiredCompetencies as $competencyId => $requiredLevel) {
-                $talentCompetency = $talent->competencies->firstWhere('id', $competencyId);
-                if ($talentCompetency && $talentCompetency->pivot->proficiency_level >= $requiredLevel) {
-                    // Simple score: sum of proficiency levels for required competencies
-                    // More sophisticated scoring could involve weights, normalization, etc.
-                    $score += $talentCompetency->pivot->proficiency_level;
-                    $matchedCompetenciesCount++;
+        $rankedTalents = $potentialTalents->map(function ($talent) use ($requiredCompetenciesData) {
+            $score = 0;
+
+            foreach ($requiredCompetenciesData as $reqComp) {
+                $talentCompetency = $talent->competencies->firstWhere('id', $reqComp->id);
+
+                // The main query already ensures the talent meets the minimum required_proficiency_level.
+                // Here, we just need to ensure the talent has the competency (which they should)
+                // and then calculate the weighted score.
+                if ($talentCompetency) {
+                    // Weighted score: talent's proficiency level * weight for that competency in this request
+                    $score += ($talentCompetency->pivot->proficiency_level * $reqComp->weight);
                 }
             }
 
-            // Add score to the talent object (could also use a DTO)
-            $talent->dss_score = $score; // Store the calculated score
-
-            Log::debug("[DSS] Scoring Talent ID: {$talent->id}, Score: {$talent->dss_score}");
+            $talent->dss_score = $score; // Store the calculated weighted score
+            Log::debug("[DSS] Scoring Talent ID: {$talent->id}, Weighted Score: {$talent->dss_score}");
 
             return $talent;
         })
-        // The initial query already ensures talents meet all requirements, so no need for further filtering here.
-        ->sortByDesc('dss_score'); // Rank by score descending
+        ->sortByDesc('dss_score'); // Rank by the new weighted score descending
 
-        Log::info('[DSS] Found ' . $rankedTalents->count() . ' ranked talents after scoring and filtering.');
+        Log::info('[DSS] Found ' . $rankedTalents->count() . ' ranked talents after weighted scoring.');
 
         // 4. Return the top N ranked talents
         $finalTalents = $rankedTalents->take($limit);

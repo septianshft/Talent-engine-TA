@@ -51,6 +51,6 @@ class TalentRequest extends Model
     public function competencies(): BelongsToMany
     {
         return $this->belongsToMany(Competency::class, 'competency_talent_request')
-                    ->withPivot('required_proficiency_level');
+                    ->withPivot('required_proficiency_level', 'weight'); // Removed withTimestamps()
     }
 }
