@@ -18,7 +18,8 @@ class TalentRequestController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        // Corrected relationship name from 'talent' to 'assignedTalent'
+        // Eager load assignedTalent and their phone_number to prevent N+1 queries
+        // The 'phone_number' is part of the 'users' table, so 'assignedTalent' will include it.
         $requests = $user->createdRequests()->with('assignedTalent')->latest()->paginate(10);
 
         return view('user.requests.index', compact('requests'));

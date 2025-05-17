@@ -131,13 +131,13 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-lg font-medium text-indigo-600 dark:text-indigo-400 truncate">{{ $talent->name }}</p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ $talent->email }}</p>                
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ $talent->email }}</p>
                                     <div class="mt-2 flex flex-wrap gap-2">
                                         @foreach ($talent->competencies as $competency)
                                             <span class="px-2 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full bg-blue-100 dark:bg-blue-800/50 text-blue-800 dark:text-blue-300">
                                                 {{ $competency->name }} (Level: {{ $competency->pivot->proficiency_level }})
                                             </span>
-                                        @endforeach 
+                                        @endforeach
                                     </div>
                                 </div>
                                 <div class="ml-4 text-right">
