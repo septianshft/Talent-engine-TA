@@ -46,9 +46,9 @@ RUN npm run build
 
 # --- Laravel Optimization (run after all files are present) ---
 # These commands improve performance in production.
-RUN php artisan config:cache && \\
-    php artisan route:cache && \\
-    php artisan view:cache
+RUN php artisan config:cache
+RUN php artisan route:cache
+RUN php artisan view:cache
 
 # --- Environment Variables ---
 # WEBROOT tells the base image (richarvey/nginx-php-fpm) where your public directory is.
