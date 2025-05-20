@@ -52,24 +52,29 @@ RUN php artisan view:cache
 
 # --- Environment Variables ---
 # WEBROOT tells the base image (richarvey/nginx-php-fpm) where your public directory is.
-ENV WEBROOT /var/www/html/public
-ENV PHP_ERRORS_STDERR 1       # Send PHP errors to stderr for easier debugging on Render
-ENV RUN_SCRIPTS 1             # Enable run_scripts in /etc/cont-init.d for richarvey/nginx-php-fpm
-ENV REAL_IP_HEADER 1
+ENV WEBROOT=/var/www/html/public
+# Send PHP errors to stderr for easier debugging on Render
+ENV PHP_ERRORS_STDERR=1
+# Enable run_scripts in /etc/cont-init.d for richarvey/nginx-php-fpm
+ENV RUN_SCRIPTS=1
+ENV REAL_IP_HEADER=1
 
 # Laravel specific environment variables
-# These will be set in Render\\'s UI, but defaults are good for the image.
-ENV APP_ENV production
-ENV APP_DEBUG false           # Should always be false in production
-ENV LOG_CHANNEL stderr        # Recommended for containerized environments
-ENV DB_CONNECTION pgsql       # Default to PostgreSQL for Render
+# These will be set in Render's UI, but defaults are good for the image.
+ENV APP_ENV=production
+# Should always be false in production
+ENV APP_DEBUG=false
+# Recommended for containerized environments
+ENV LOG_CHANNEL=stderr
+# Default to PostgreSQL for Render
+ENV DB_CONNECTION=pgsql
 
-# Set SKIP_COMPOSER to 1 because we\\'ve already run composer install during the build.
-# This prevents the base image\\'s init script from trying to run it again at container startup.
-ENV SKIP_COMPOSER 1
+# Set SKIP_COMPOSER to 1 because we've already run composer install during the build.
+# This prevents the base image's init script from trying to run it again at container startup.
+ENV SKIP_COMPOSER=1
 
 # Allow composer to run as root. This is sometimes needed if build steps or base image scripts run as root.
-ENV COMPOSER_ALLOW_SUPERUSER 1
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # --- Permissions ---
 # The richarvey/nginx-php-fpm image typically handles permissions for /var/www/html
