@@ -39,13 +39,40 @@ class DecisionSupportService
             return collect();
         }
 
+        // Normalize weights to sum to 1 (Formal SAW step)
+        $sumOfRawWeights = $requiredCompetenciesData->sum('weight');
+        Log::debug('[DSS] Sum of raw weights: ' . $sumOfRawWeights);
+
+        // Pass $requiredCompetenciesData to the closure using 'use' to make its count accessible
+        $normalizedCompetenciesData = $requiredCompetenciesData->map(function ($reqComp) use ($sumOfRawWeights, $requiredCompetenciesData) {
+            $normalizedWeight = 0;
+            if ($sumOfRawWeights > 0) {
+                $normalizedWeight = $reqComp->weight / $sumOfRawWeights;
+            } elseif ($requiredCompetenciesData->count() > 0) { // Check if the original collection had items
+                // If sum is 0 but there are competencies (e.g., all user-defined weights were 0, or only one competency with weight 0),
+                // assign equal weight. This prevents division by zero if sumOfRawWeights is 0
+                // and ensures competencies are still considered.
+                $normalizedWeight = 1 / $requiredCompetenciesData->count();
+            }
+            // If $requiredCompetenciesData->count() is 0, $normalizedWeight remains 0, which is fine as the loop won't run.
+
+            return (object) [
+                'id' => $reqComp->id,
+                'required_proficiency_level' => $reqComp->required_proficiency_level,
+                'original_weight' => $reqComp->weight, // Keep original for reference if needed
+                'weight' => $normalizedWeight, // This 'weight' will now be the normalized weight
+            ];
+        });
+        Log::debug('[DSS] Normalized Competencies Data:', $normalizedCompetenciesData->toArray());
+
+
         // 2. Find talents who have ALL the required competencies at or above the required level
         $potentialTalentsQuery = User::whereHas('roles', function ($query) {
             $query->where('name', 'talent'); // Ensure the user has the 'talent' role
         });
 
-        // Chain a whereHas condition for each required competency
-        foreach ($requiredCompetenciesData as $reqComp) {
+        // Chain a whereHas condition for each required competency using normalized data for consistency in checks if needed, though not strictly necessary for the DB query itself here
+        foreach ($normalizedCompetenciesData as $reqComp) { // Iterate using normalized data
             $potentialTalentsQuery->whereHas('competencies', function ($query) use ($reqComp) {
                 $query->where('competencies.id', $reqComp->id)
                       ->where('competency_user.proficiency_level', '>=', $reqComp->required_proficiency_level);
@@ -61,29 +88,38 @@ class DecisionSupportService
         }
 
         // Eager load the relevant competencies for scoring after filtering
-        $requiredCompetencyIds = $requiredCompetenciesData->pluck('id')->all();
+        $requiredCompetencyIds = $normalizedCompetenciesData->pluck('id')->all(); // Use IDs from normalized data
         $potentialTalents = $potentialTalentsQuery->with(['competencies' => function ($query) use ($requiredCompetencyIds) {
             $query->whereIn('competencies.id', $requiredCompetencyIds); // Load only the competencies relevant to the request
         }])->get();
 
         Log::info('[DSS] Found ' . $potentialTalents->count() . ' potential talents after initial query.');
 
-        // 3. Score the potential talents using weights
-        // Max proficiency is typically 4 (Expert), but not directly used in this weighted sum if weights handle relative importance.
-        // $maxProficiency = 4; // Kept for reference if normalization is added later
+        // 3. Score the potential talents using normalized weights
+        // Max proficiency is typically 4 or 5 (Expert).
+        // For a more formal SAW, proficiency levels (performance scores) could also be normalized, e.g., to a 0-1 scale.
+        // Example: if proficiency is 1-5, normalized_proficiency = (current_proficiency - 1) / (5 - 1)
+        // For now, we are only normalizing weights as per the immediate feedback.
+        // $maxProficiencyPossible = 5; // Assuming max possible proficiency is 5
+        // $minProficiencyPossible = 1; // Assuming min possible proficiency is 1
 
-        $rankedTalents = $potentialTalents->map(function ($talent) use ($requiredCompetenciesData) {
+        $rankedTalents = $potentialTalents->map(function ($talent) use ($normalizedCompetenciesData) { // Use $normalizedCompetenciesData here
             $score = 0;
 
-            foreach ($requiredCompetenciesData as $reqComp) {
+            foreach ($normalizedCompetenciesData as $reqComp) { // Iterate using normalized data
                 $talentCompetency = $talent->competencies->firstWhere('id', $reqComp->id);
 
-                // The main query already ensures the talent meets the minimum required_proficiency_level.
-                // Here, we just need to ensure the talent has the competency (which they should)
-                // and then calculate the weighted score.
                 if ($talentCompetency) {
-                    // Weighted score: talent's proficiency level * weight for that competency in this request
-                    $score += ($talentCompetency->pivot->proficiency_level * $reqComp->weight);
+                    // Current proficiency level of the talent for the competency
+                    $talentProficiency = $talentCompetency->pivot->proficiency_level;
+
+                    // Optional: Normalize proficiency level (performance score)
+                    // $normalizedTalentProficiency = ($maxProficiencyPossible - $minProficiencyPossible) > 0 ?
+                    //    ($talentProficiency - $minProficiencyPossible) / ($maxProficiencyPossible - $minProficiencyPossible) : 0;
+
+                    // Weighted score: talent's proficiency level * NORMALIZED weight for that competency
+                    // If performance scores were normalized: $score += ($normalizedTalentProficiency * $reqComp->weight);
+                    $score += ($talentProficiency * $reqComp->weight);
                 }
             }
 

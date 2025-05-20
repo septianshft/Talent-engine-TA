@@ -14,10 +14,10 @@
                 {{-- Optional: Add a semi-transparent overlay if needed for text readability --}}
                 {{-- <div class="absolute inset-0 bg-black opacity-50"></div> --}}
                 <a href="{{ route('home') }}" class="relative z-20 flex items-center text-lg font-medium" wire:navigate>
-                    <span class="flex h-10 w-10 items-center justify-center rounded-md">
-                        <x-app-logo-icon class="me-2 h-7 fill-current text-white" />
+                    <span class="flex items-center justify-center rounded-md">
+                        <img src="{{ asset('images/PUI Logo GPT Created .png') }}" class="me-2 h-12 w-12" alt="TalentConnect Logo">
                     </span>
-                    {{ config('app.name', 'Laravel') }}
+                    <span class="text-black dark:text-white">TalentConnect</span>
                 </a>
 
                 @php
@@ -38,7 +38,7 @@
                             <x-app-logo-icon class="size-9 fill-current text-black dark:text-white" />
                         </span>
 
-                        <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
+                        <span class="sr-only">TalentConnect</span>
                     </a>
                     {{ $slot }}
                 </div>
