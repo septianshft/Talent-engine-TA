@@ -50,13 +50,10 @@ class UserFactory extends Factory
      */
     public function configure(): static
     {
-        return $this->afterCreating(function (\App\Models\User $user) {
-            // Attach the 'user' role by default if no other role is specified
-            if ($user->roles()->count() === 0) {
-                $userRole = Role::firstOrCreate(['name' => 'user']);
-                $user->roles()->attach($userRole);
-            }
-        });
+        // Remove automatic default role attachment.
+        // Roles should be explicitly assigned via states (e.g., isAdmin(), isTalent())
+        // or directly in seeders/tests (e.g., using hasAttached() or afterCreating() hooks).
+        return $this;
     }
 
     /**

@@ -80,11 +80,13 @@ class User extends Authenticatable
     }
 
     /**
-     * The talent requests received by this user (talent).
+     * The talent requests assigned to this user (talent) through the pivot table.
      */
-    public function receivedRequests(): HasMany
+    public function assignedRequests(): BelongsToMany
     {
-        return $this->hasMany(TalentRequest::class, 'talent_id');
+        return $this->belongsToMany(TalentRequest::class, 'talent_request_assignments', 'talent_id', 'talent_request_id')
+                    ->withPivot('status') // To get the status of each assignment
+                    ->withTimestamps(); // If you want to track when assignments are created/updated
     }
 
     /**

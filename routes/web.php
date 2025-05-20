@@ -18,10 +18,11 @@ Route::view('dashboard', 'dashboard')
 
 // User Talent Request Routes
 Route::middleware(['auth', 'verified', 'role:user'])->prefix('requests')->name('user.requests.')->group(function () {
-    Route::get('/', [App\Http\Controllers\User\TalentRequestController::class, 'index'])->name('index');
-    Route::get('/create', [App\Http\Controllers\User\TalentRequestController::class, 'create'])->name('create');
-    Route::post('/', [App\Http\Controllers\User\TalentRequestController::class, 'store'])->name('store');
-    Route::delete('/{talentRequest}', [App\Http\Controllers\User\TalentRequestController::class, 'destroy'])->name('destroy'); // Assuming users can delete their requests before approval
+    Route::get('/', [UserTalentRequestController::class, 'index'])->name('index');
+    Route::get('/create', [UserTalentRequestController::class, 'create'])->name('create');
+    Route::post('/', [UserTalentRequestController::class, 'store'])->name('store');
+    Route::get('/{talentRequest}', [UserTalentRequestController::class, 'show'])->name('show'); // Added show route
+    Route::delete('/{talentRequest}', [UserTalentRequestController::class, 'destroy'])->name('destroy'); // Assuming users can delete their requests before approval
 });
 
 // Admin Dashboard Route
@@ -34,7 +35,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin/talent-requ
     Route::get('/', [App\Http\Controllers\Admin\TalentRequestController::class, 'index'])->name('index');
     Route::get('/{talentRequest}', [App\Http\Controllers\Admin\TalentRequestController::class, 'show'])->name('show');
     Route::patch('/{talentRequest}', [App\Http\Controllers\Admin\TalentRequestController::class, 'update'])->name('update'); // For rejection
-    Route::patch('/{talentRequest}/assign', [App\Http\Controllers\Admin\TalentRequestController::class, 'assign'])->name('assign');
+    Route::post('/{talentRequest}/assign', [App\Http\Controllers\Admin\TalentRequestController::class, 'assign'])->name('assign'); // Changed from PATCH to POST
     Route::patch('/{talentRequest}/complete', [App\Http\Controllers\Admin\TalentRequestController::class, 'markAsCompleted'])->name('complete'); // Mark as completed
 });
 

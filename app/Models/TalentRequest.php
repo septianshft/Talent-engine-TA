@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Database\Factories\TalentRequestFactory; // Import the factory
+use App\Models\CompetencyTalentRequest; // Import the custom pivot model
 
 class TalentRequest extends Model
 {
@@ -24,7 +25,7 @@ class TalentRequest extends Model
 
     protected $fillable = [
         'user_id',
-        'talent_id',
+        // 'talent_id', // Removed as it's now a many-to-many relationship
         'details',
         'status',
     ];
@@ -32,17 +33,19 @@ class TalentRequest extends Model
     /**
      * Get the user who created the request.
      */
-    public function requestingUser(): BelongsTo // Renamed from user()
+    public function requestingUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
-     * Get the talent who is the target of the request.
+     * The talents assigned to this request.
      */
-    public function assignedTalent(): BelongsTo // Renamed from talent()
+    public function assignedTalents(): BelongsToMany
     {
-        return $this->belongsTo(User::class, 'talent_id');
+        return $this->belongsToMany(User::class, 'talent_request_assignments', 'talent_request_id', 'talent_id')
+                    ->withPivot('status') // To get the status of each assignment
+                    ->withTimestamps(); // If you want to track when assignments are created/updated
     }
 
     /**
@@ -51,6 +54,7 @@ class TalentRequest extends Model
     public function competencies(): BelongsToMany
     {
         return $this->belongsToMany(Competency::class, 'competency_talent_request')
-                    ->withPivot('required_proficiency_level', 'weight'); // Removed withTimestamps()
+                    ->using(CompetencyTalentRequest::class) // Use the custom pivot model
+                    ->withPivot('required_proficiency_level', 'weight');
     }
 }

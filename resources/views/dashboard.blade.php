@@ -20,7 +20,7 @@ $competencyTalentCounts = $competencies->pluck('users_count')->toJson();
     <div class="flex h-full w-full flex-1 flex-col gap-6 p-4 md:p-6">
         <div class="grid gap-6 md:grid-cols-3">
             {{-- Welcome Message and Create Button --}}
-            <div 
+            <div
                 class="relative z-0 flex flex-col items-start justify-between gap-4 overflow-hidden rounded-lg border border-neutral-200 bg-gray-50 p-6 shadow-sm dark:border-neutral-700 dark:bg-gray-800 md:col-span-1"
                 style="background-image: url('{{ asset('images/user_recruit_add.png') }}'); background-size: contain; background-position: bottom right; background-repeat: no-repeat;"
             >
@@ -45,7 +45,7 @@ $competencyTalentCounts = $competencies->pluck('users_count')->toJson();
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-md font-medium text-gray-900 dark:text-white">
                         Contact Information
-                    </h2>                    
+                    </h2>
                 </div>
                 <div class="space-y-4">
                     <div>
@@ -75,7 +75,7 @@ $competencyTalentCounts = $competencies->pluck('users_count')->toJson();
                             </svg>
                             <p class="text-sm text-gray-900 dark:text-white">intelligentsensingiot@telkomuniversity.ac.id</p>
                         </div>
-                    </div>                    
+                    </div>
                 </div>
             </div>
 

@@ -5,16 +5,16 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Competency;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Faker\Factory as Faker;
 
 class DatabaseSeeder extends Seeder
 {
-    protected $faker; // Add faker property
+    protected $faker;
 
     public function __construct()
     {
-        $this->faker = \Faker\Factory::create(); // Initialize faker
+        $this->faker = Faker::create();
     }
 
     /**
@@ -25,53 +25,65 @@ class DatabaseSeeder extends Seeder
         // Run Role and Competency Seeders first
         $this->call([
             RoleSeeder::class,
-            CompetencySeeder::class,
+            CompetencySeeder::class, // Assuming this seeds a few essential competencies
         ]);
 
         // Get roles
         $adminRole = Role::where('name', 'admin')->first();
         $userRole = Role::where('name', 'user')->first();
         $talentRole = Role::where('name', 'talent')->first();
-
-        // Get all competencies
         $allCompetencies = Competency::all();
 
         // Create Admin User
-        User::factory()->hasAttached($adminRole)->create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            // Password is 'password' (hashed by factory)
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Admin User',
+                'password' => bcrypt('password'), // Consider using Hash::make()
+            ]
+        )->roles()->syncWithoutDetaching($adminRole->id);
 
-        // Create Regular User
-        User::factory()->hasAttached($userRole)->create([
-            'name' => 'Regular User',
-            'email' => 'user@example.com',
-        ]);
+        // Create one Regular User (for creating talent requests)
+        User::factory()->create([
+            'name' => 'Test Requester User',
+            'email' => 'requester@example.com',
+        ])->roles()->attach($userRole);
 
-        // Create Talent Users
-        User::factory(200)->hasAttached($talentRole)->create()->each(function ($user) use ($allCompetencies) {
-            // Ensure there are competencies to attach
+        // Create multiple Talent Users
+        $numberOfTalentsToCreate = 350; // You can adjust this number
+        for ($i = 0; $i < $numberOfTalentsToCreate; $i++) {
+            $talentUser = User::factory()->create([
+                'name' => $this->faker->name . ' (Talent)',
+                'email' => $this->faker->unique()->safeEmail,
+            ]);
+            $talentUser->roles()->attach($talentRole);
+
+            // Assign a few competencies to each talent user
             if ($allCompetencies->isNotEmpty()) {
-                // Attach a random number of competencies (e.g., 2 to 5) from the full list
-                $competenciesToAttach = $allCompetencies->random(min(rand(2, 5), $allCompetencies->count()));
-                $attachData = [];
-                foreach ($competenciesToAttach as $competency) {
-                    $attachData[$competency->id] = ['proficiency_level' => $this->faker->numberBetween(1, 5)];
-                }
-                $user->competencies()->attach($attachData);
-            }
-        });
+                // Ensure at least 2 competencies, and at most 5 or total available if less than 5
+                $competenciesToAttachCount = $this->faker->numberBetween(2, min(5, $allCompetencies->count()));
+                $competenciesToAttach = $allCompetencies->random($competenciesToAttachCount);
 
-        // You can add TalentRequest seeding here later if needed
-        // Example:
-        // $requestingUser = User::whereHas('roles', fn($q) => $q->where('name', 'user'))->first();
-        // $assignedTalent = User::whereHas('roles', fn($q) => $q->where('name', 'talent'))->first();
-        // \App\Models\TalentRequest::factory()->create([
-        //     'user_id' => $requestingUser->id,
-        //     'talent_id' => $assignedTalent->id, // Optional: Assign talent later
-        //     'details' => 'Need help with Laravel project.',
-        //     'status' => 'pending_admin',
-        // ]);
+                $attachData = [];
+                // Handle cases where random() might return a single item or a collection
+                if ($competenciesToAttach instanceof Competency) { // Single competency returned
+                    $attachData[$competenciesToAttach->id] = ['proficiency_level' => $this->faker->numberBetween(1, 4)];
+                } else { // Collection of competencies returned
+                    foreach ($competenciesToAttach as $competency) {
+                        $attachData[$competency->id] = ['proficiency_level' => $this->faker->numberBetween(1, 4)];
+                    }
+                }
+
+                if (!empty($attachData)) {
+                    $talentUser->competencies()->attach($attachData);
+                }
+            }
+        }
+
+        // All previous TalentRequest::factory() calls are removed.
+        // You will create TalentRequests manually through the application.
+
+        $this->command->info('Database seeded with essential roles, competencies, an admin, a requester, and ' . $numberOfTalentsToCreate . ' talent users.');
+        $this->command->info('No TalentRequests have been seeded automatically.');
     }
 }

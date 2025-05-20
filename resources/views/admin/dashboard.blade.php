@@ -1,82 +1,73 @@
 <x-layouts.app>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+        <h2 class="font-semibold text-2xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Admin Dashboard') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Summary Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-lg sm:rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Total Users</h3>
-                    <p class="mt-1 text-3xl font-semibold text-indigo-600 dark:text-indigo-400">{{ $totalUsers }}</p>
-                </div>
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-lg sm:rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Pending Requests</h3>
-                    <p class="mt-1 text-3xl font-semibold text-yellow-600 dark:text-yellow-400">{{ $pendingRequests }}</p>
-                </div>
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-lg sm:rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Active Talents</h3>
-                    <p class="mt-1 text-3xl font-semibold text-green-600 dark:text-green-400">{{ $activeTalents }}</p>
-                </div>
+    <div class="py-8 md:py-10"> {{-- Adjusted py for consistency --}}
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 lg:space-y-10"> {{-- Adjusted px and space-y --}}
+
+            {{-- Summary Stats --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"> {{-- Adjusted gap --}}
+                <x-dashboard.card title="Total Users" value="{{ $totalUsers }}" color="indigo" />
+                <x-dashboard.card title="Pending Requests" value="{{ $pendingRequests }}" color="yellow" />
+                <x-dashboard.card title="Active Talents" value="{{ $activeTalents }}" color="green" />
             </div>
 
-            <!-- Competency Distribution Chart -->
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-lg sm:rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-8 h-96"> {{-- Added h-96 for height --}}
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Talent Competency Distribution</h3>
-                <div class="relative h-full w-full"> {{-- Added relative container for canvas --}}
+            {{-- Chart Section --}}
+            <div class="bg-white dark:bg-gray-800 shadow-lg sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 h-72 sm:h-80 md:h-96"> {{-- Adjusted padding and made height responsive --}}
+                <h3 class="text-md sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">Talent Competency Distribution</h3> {{-- Adjusted text size and margin --}}
+                <div class="relative h-full w-full">
                     <canvas id="competencyChart"></canvas>
                 </div>
             </div>
 
-            <!-- Existing Content -->
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg border border-gray-200 dark:border-gray-700">
-                <div class="p-8 text-gray-900 dark:text-gray-100 space-y-4">
-                    <livewire:admin.user-management/>
-                </div>
+            {{-- User Management Section --}}
+            <div class="bg-white dark:bg-gray-800 shadow-lg sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6"> {{-- Adjusted padding --}}
+                <h3 class="text-md sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">User Management</h3> {{-- Adjusted text size and margin --}}
+                <livewire:admin.user-management />
             </div>
+
         </div>
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> {{-- Or import via Vite --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const ctx = document.getElementById('competencyChart').getContext('2d');
-            const competencyChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: @json($competencyLabels),
-                    datasets: [{
-                        label: 'Number of Talents',
-                        data: @json($competencyCounts),
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)', // Teal color
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1 // Ensure y-axis increments by whole numbers
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const ctx = document.getElementById('competencyChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: @json($competencyLabels),
+                        datasets: [{
+                            label: 'Number of Talents',
+                            data: @json($competencyCounts),
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
                             }
                         }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false // Hide legend if only one dataset
-                        }
                     }
-                }
+                });
             });
-        });
-    </script>
+        </script>
     @endpush
 </x-layouts.app>
-

@@ -17,7 +17,7 @@ class CompetencyFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => $this->faker->unique()->jobTitle, // Add a name for the competency
         ];
     }
 }

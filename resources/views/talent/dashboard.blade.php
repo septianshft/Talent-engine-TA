@@ -1,12 +1,11 @@
 @php
 use Illuminate\Support\Facades\Auth;
-use App\Models\TalentRequest;
 
 $talent = Auth::user();
 $talentName = $talent->name;
-$receivedRequests = TalentRequest::where('talent_id', $talent->id)
+$receivedRequests = $talent->assignedRequests()
     ->with('requestingUser') // Eager load the user who made the request
-    ->latest()
+    ->orderByDesc('talent_request_assignments.created_at') // Order by when the assignment was created
     ->take(5) // Show the 5 most recent requests
     ->get();
 @endphp
@@ -22,13 +21,13 @@ $receivedRequests = TalentRequest::where('talent_id', $talent->id)
                 Here are the latest talent requests assigned to you.
             </p>
         </div>
-        
+
         {{-- Contact Information Card --}}
         <div class="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-gray-800 md:col-span-1">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-md font-medium text-gray-900 dark:text-white">
                     Contact Information
-                </h2>                    
+                </h2>
             </div>
             <div class="space-y-4">
                 <div>
@@ -58,7 +57,7 @@ $receivedRequests = TalentRequest::where('talent_id', $talent->id)
                         </svg>
                         <p class="text-sm text-gray-900 dark:text-white">intelligentsensingiot@telkomuniversity.ac.id</p>
                     </div>
-                </div>                    
+                </div>
             </div>
         </div>
 

@@ -18,9 +18,15 @@ class TalentRequestController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        // Eager load assignedTalent and their phone_number to prevent N+1 queries
-        // The 'phone_number' is part of the 'users' table, so 'assignedTalent' will include it.
-        $requests = $user->createdRequests()->with('assignedTalent')->latest()->paginate(10);
+        // Eager load the assignedTalents relationship
+        // This will fetch all talents assigned to each request through the pivot table.
+        $requests = $user->createdRequests()
+                         ->with(['assignedTalents' => function ($query) {
+                             // Optionally, you can select specific fields from the pivot table or related talent model
+                             $query->withPivot('status', 'created_at'); // Load pivot status and assignment time
+                         }])
+                         ->latest()
+                         ->paginate(10);
 
         return view('user.requests.index', compact('requests'));
     }
@@ -30,8 +36,10 @@ class TalentRequestController extends Controller
      */
     public function create()
     {
-        // Fetch competencies for the form
-        $competencies = Competency::orderBy('name')->get();
+        // Fetch competencies that are possessed by at least one talent
+        $competencies = Competency::whereHas('users') // 'users' is the relationship name in Competency model
+                                  ->orderBy('name')
+                                  ->get();
 
         return view('user.requests.create', compact('competencies'));
     }
@@ -68,7 +76,7 @@ class TalentRequestController extends Controller
         $talentRequest = TalentRequest::create([
             'user_id' => Auth::id(),
             'details' => $validated['details'],
-            'status' => 'pending_admin',
+            'status' => 'pending_admin', // Initial status
         ]);
 
         // Prepare data for attaching competencies with proficiency levels and weights
@@ -88,6 +96,27 @@ class TalentRequestController extends Controller
     }
 
     /**
+     * Display the specified talent request.
+     */
+    public function show(TalentRequest $talentRequest)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // Ensure the user owns this request
+        if ($talentRequest->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Eager load assigned talents and their pivot status, and also the competencies for the request
+        $talentRequest->load(['assignedTalents' => function ($query) {
+            $query->withPivot('status', 'created_at', 'updated_at');
+        }, 'competencies']);
+
+        return view('user.requests.show', compact('talentRequest'));
+    }
+
+    /**
      * Remove the specified talent request from storage.
      */
     public function destroy(TalentRequest $talentRequest)
@@ -100,10 +129,15 @@ class TalentRequestController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Optional: Add check to only allow deletion if status is 'pending_admin'
-        // if ($talentRequest->status !== 'pending_admin') {
-        //     return back()->with('error', 'Cannot delete a request that is already being processed.');
+        // Optional: Add check to only allow deletion if status is 'pending_admin' or similar non-active states
+        // if (!in_array($talentRequest->status, ['pending_admin', 'draft'])) { // Example states
+        //     return back()->with('error', 'Cannot delete a request that is already being processed or is finalized.');
         // }
+
+        // Detach related competencies and talent assignments before deleting the request to maintain data integrity if needed,
+        // or rely on database cascade rules if set up.
+        // $talentRequest->competencies()->detach();
+        // $talentRequest->assignedTalents()->detach(); // This will clear entries from the pivot table
 
         $talentRequest->delete();
 

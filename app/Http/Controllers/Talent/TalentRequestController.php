@@ -6,20 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\TalentRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB; // Added for potential direct pivot updates
 
 class TalentRequestController extends Controller
 {
     /**
-     * Display a listing of the talent requests received by the talent.
+     * Display a listing of the talent requests assigned to the talent.
      */
     public function index()
     {
         /** @var \App\Models\User $talent */
         $talent = Auth::user();
-        $requests = $talent->receivedRequests()
-                           ->where('status', 'pending_talent') // Only show requests ready for talent review
+        // Get requests assigned to this talent where their specific assignment status is 'pending_assignment_response'
+        // The pivot table 'talent_request_assignments' should have a 'status' column
+        $requests = $talent->assignedRequests()
+                           ->wherePivot('status', 'pending_assignment_response') // Assumes admin sets this status in pivot
                            ->with('requestingUser') // Eager load the requesting user
-                           ->latest()
+                           ->latest('talent_request_assignments.created_at') // Order by when the assignment was created
                            ->paginate(10);
 
         return view('talent.requests.index', compact('requests'));
@@ -33,51 +36,67 @@ class TalentRequestController extends Controller
         /** @var \App\Models\User $talent */
         $talent = Auth::user();
 
-        // Ensure the logged-in talent is the recipient of this request
-        if ($talentRequest->talent_id !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
+        // Check if the talent is assigned to this request and their assignment status is relevant
+        $assignment = $talent->assignedRequests()
+                              ->where('talent_request_id', $talentRequest->id)
+                              ->wherePivotIn('status', ['pending_assignment_response', 'approved_by_talent', 'rejected_by_talent']) // Talent can see if pending or already actioned
+                              ->first();
+
+        if (!$assignment) {
+            abort(403, 'You are not authorized to view this request or your assignment status is not applicable.');
         }
 
-        // Ensure the request is actually meant for the talent to see
-        if (!in_array($talentRequest->status, ['pending_talent', 'approved', 'rejected_talent'])) { // Add other relevant statuses if needed
-             abort(404); // Or redirect with an error
-        }
+        // Pass the assignment details (including pivot status) to the view
+        $talentRequest->load('requestingUser', 'competencies'); // Load requesting user and competencies
+        $currentAssignmentStatus = $assignment->pivot->status;
 
-        $talentRequest->load('requestingUser'); // Load the requesting user details
-
-        return view('talent.requests.show', compact('talentRequest'));
+        return view('talent.requests.show', compact('talentRequest', 'currentAssignmentStatus'));
     }
 
     /**
-     * Update the specified talent request in storage (talent's response).
+     * Update the talent's response to the assignment.
      */
     public function update(Request $request, TalentRequest $talentRequest)
     {
         /** @var \App\Models\User $talent */
         $talent = Auth::user();
 
-        // Ensure the logged-in talent is the recipient of this request
-        if ($talentRequest->talent_id !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
+        // Ensure the talent is assigned to this request and it's awaiting their response
+        $assignment = $talent->assignedRequests()
+                              ->where('talent_request_id', $talentRequest->id)
+                              ->wherePivot('status', 'pending_assignment_response')
+                              ->first();
 
-        // Ensure the request is currently pending talent action
-        if ($talentRequest->status !== 'pending_talent') {
-            return back()->with('error', 'This request is not awaiting your response.');
+        if (!$assignment) {
+            return back()->with('error', 'This request is not awaiting your response or you are not assigned to it.');
         }
 
         $validated = $request->validate([
-            'action' => 'required|in:approve,reject', // Expecting 'approve' or 'reject'
+            'action' => 'required|in:approve,reject',
             // Add validation for comments if talents can add comments
         ]);
 
-        $newStatus = $validated['action'] === 'approve' ? 'approved' : 'rejected_talent';
+        $newPivotStatus = $validated['action'] === 'approve' ? 'approved_by_talent' : 'rejected_by_talent';
 
-        $talentRequest->update(['status' => $newStatus]);
+        // Update the pivot table status for this specific talent's assignment
+        $talent->assignedRequests()->updateExistingPivot($talentRequest->id, ['status' => $newPivotStatus]);
+
+        if ($newPivotStatus === 'approved_by_talent') {
+            // Update the main TalentRequest status to 'approved'
+            // This assumes that one talent approval is enough to consider the request approved for completion.
+            if ($talentRequest->status === 'pending_talent') { // Only update if it's currently pending talent
+                $talentRequest->status = 'approved';
+                $talentRequest->save();
+                // Optionally, add a log or notification here
+            }
+        }
 
         // Optional: Add notification for the requesting user and/or admin here
+        // Optional: Logic to update the main TalentRequest status if all assigned talents have responded.
+        // For example, if all approved, set TalentRequest to 'awaiting_requester_confirmation'
+        // If all rejected, set TalentRequest to 'closed_no_talent'
+        // This logic might be complex and better handled in a service or observer.
 
-        return redirect()->route('talent.requests.index')->with('success', 'Request ' . $validated['action'] . 'd successfully.');
+        return redirect()->route('talent.requests.index')->with('success', 'Your response has been recorded successfully.');
     }
-    //
 }
