@@ -55,7 +55,7 @@ RUN php artisan view:cache
 ENV WEBROOT /var/www/html/public
 ENV PHP_ERRORS_STDERR 1       # Send PHP errors to stderr for easier debugging on Render
 ENV RUN_SCRIPTS 1             # Enable run_scripts in /etc/cont-init.d for richarvey/nginx-php-fpm
-ENV REAL_IP_HEADER 1          # If behind a load balancer (like Render\\'s), to get the real client IP in Nginx
+ENV REAL_IP_HEADER 1          # If behind a load balancer (like Render's), to get the real client IP in Nginx
 
 # Laravel specific environment variables
 # These will be set in Render\\'s UI, but defaults are good for the image.
