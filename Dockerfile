@@ -12,12 +12,12 @@ FROM richarvey/nginx-php-fpm:latest
 RUN apk add --no-cache nodejs npm postgresql-dev libxml2-dev libzip-dev
 
 # Install required PHP extensions:
-# - pdo_pgsql: for PostgreSQL database connectivity
-# - zip: often required by composer packages
-# - fileinfo, bcmath, ctype, tokenizer, xml, mbstring, dom: commonly required by Laravel and its dependencies.
-# The base image (richarvey/nginx-php-fpm) likely includes many common Laravel extensions
-# (e.g., mbstring, openssl, tokenizer, xml, dom, fileinfo). Add what\\\'s missing.
-# RUN docker-php-ext-install pdo_pgsql zip fileinfo bcmath ctype tokenizer xml mbstring dom
+# Explicitly install pdo_pgsql for PostgreSQL database connectivity
+# and zip as it is often required by composer packages.
+RUN docker-php-ext-install pdo_pgsql zip
+
+# The base image (richarvey/nginx-php-fpm) likely includes many other common Laravel extensions
+# (e.g., mbstring, openssl, tokenizer, xml, dom, fileinfo).
 
 # Set working directory
 WORKDIR /var/www/html
