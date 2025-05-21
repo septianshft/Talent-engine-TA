@@ -44,8 +44,7 @@ COPY . .
 # --- Permissions ---
 # Set permissions for Laravel storage and cache directories.
 # This should be done after copying files and before composer install or artisan commands.
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \\
-    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # --- Asset Preparation ---
 # Ensure target directories exist for asset copying
