@@ -7,7 +7,9 @@ FROM richarvey/nginx-php-fpm:latest
 # Install system dependencies:
 # - nodejs & npm: for building frontend assets
 # - postgresql-dev: for compiling the pdo_pgsql PHP extension
-RUN apk add --no-cache nodejs npm postgresql-dev
+# - libxml2-dev: for xml, dom, tokenizer extensions
+# - libzip-dev: for zip extension
+RUN apk add --no-cache nodejs npm postgresql-dev libxml2-dev libzip-dev
 
 # Install required PHP extensions:
 # - pdo_pgsql: for PostgreSQL database connectivity
