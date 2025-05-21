@@ -41,6 +41,12 @@ RUN npm install
 # config files, routes, resources, etc.
 COPY . .
 
+# --- Permissions ---
+# Set permissions for Laravel storage and cache directories.
+# This should be done after copying files and before composer install or artisan commands.
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \\
+    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
 # --- Asset Preparation ---
 # Ensure target directories exist for asset copying
 RUN mkdir -p /var/www/html/public/images && \
@@ -101,12 +107,12 @@ ENV LOG_CHANNEL=stderr
 # Default to PostgreSQL for Render
 ENV DB_CONNECTION=pgsql
 
-# Set SKIP_COMPOSER to 1 because we've already run composer install during the build.
-# This prevents the base image's init script from trying to run it again at container startup.
+# Set SKIP_COMPOSER to 1 because we\\'ve already run composer install during the build.
+# This prevents the base image\\'s init script from trying to run it again at container startup.
 ENV SKIP_COMPOSER=1
 
 # Allow composer to run as root. This is sometimes needed if build steps or base image scripts run as root.
-ENV COMPOSER_ALLOW_SUPERUSER=1
+# ENV COMPOSER_ALLOW_SUPERUSER=1 # This is already set before composer install, which is fine.
 
 # --- Permissions ---
 # The richarvey/nginx-php-fpm image typically handles permissions for /var/www/html
@@ -114,6 +120,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 # storage/ or bootstrap/cache/, you might need to uncomment and adjust the following:
 # RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \\
 #     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# The above permission setting has been moved to an earlier appropriate step.
 
 # Expose port 80 for Nginx (Render will map this to 80/443 externally)
 EXPOSE 80
