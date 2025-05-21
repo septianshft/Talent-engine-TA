@@ -1,3 +1,7 @@
+# Dockerfile for Laravel on Render with Pos# --- Permissions ---
+# Set permissions for Laravel storage and cache directories.
+# This should be done after copying files and before composer install or artisan commands.
+
 # Dockerfile for Laravel on Render with PostgreSQL and Vite
 
 # Use a base image with Nginx and PHP.
@@ -41,9 +45,6 @@ RUN npm install
 # config files, routes, resources, etc.
 COPY . .
 
-# --- Permissions ---
-# Set permissions for Laravel storage and cache directories.
-# This should be done after copying files and before composer install or artisan commands.
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \\
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
