@@ -1,7 +1,3 @@
-# Dockerfile for Laravel on Render with Pos# --- Permissions ---
-# Set permissions for Laravel storage and cache directories.
-# This should be done after copying files and before composer install or artisan commands.
-
 # Dockerfile for Laravel on Render with PostgreSQL and Vite
 
 # Use a base image with Nginx and PHP.
@@ -18,7 +14,7 @@ RUN apk add --no-cache nodejs npm postgresql-dev
 # - zip: often required by composer packages
 # - fileinfo, bcmath, ctype, tokenizer, xml, mbstring, dom: commonly required by Laravel and its dependencies.
 # The base image (richarvey/nginx-php-fpm) likely includes many common Laravel extensions
-# (e.g., mbstring, openssl, tokenizer, xml, dom, fileinfo). Add what\\'s missing.
+# (e.g., mbstring, openssl, tokenizer, xml, dom, fileinfo). Add what\\\'s missing.
 RUN docker-php-ext-install pdo_pgsql zip fileinfo bcmath ctype tokenizer xml mbstring dom
 
 # Set working directory
@@ -29,7 +25,7 @@ WORKDIR /var/www/html
 COPY composer.json composer.lock ./
 
 # Install PHP dependencies for production
-# COMPOSER_ALLOW_SUPERUSER=1 is set as an ENV var later, but it\\'s effective for RUN commands too.
+# COMPOSER_ALLOW_SUPERUSER=1 is set as an ENV var later, but it\\\'s effective for RUN commands too.
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
 # --- Node.js Dependencies & Frontend Build ---
@@ -45,6 +41,9 @@ RUN npm install
 # config files, routes, resources, etc.
 COPY . .
 
+# --- Permissions ---
+# Set permissions for Laravel storage and cache directories.
+# This should be done after copying files and before composer install or artisan commands.
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \\
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
