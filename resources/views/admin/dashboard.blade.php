@@ -10,25 +10,21 @@
 
             {{-- Summary Stats --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"> {{-- Adjusted gap --}}
-                <x-dashboard.card title="Total Users" value="{{ $totalUsers }}" color="indigo" />
-                <x-dashboard.card title="Pending Requests" value="{{ $pendingRequests }}" color="yellow" />
-                <x-dashboard.card title="Active Talents" value="{{ $activeTalents }}" color="green" />
+                <x-dashboard.card title="Total Pengguna" value="{{ $totalUsers }}" color="indigo" />
+                <x-dashboard.card title="Permintaan Tertunda" value="{{ $pendingRequests }}" color="yellow" />
+                <x-dashboard.card title="Talent Aktif" value="{{ $activeTalents }}" color="green" />
             </div>
 
             {{-- Chart Section --}}
-            <div class="bg-white dark:bg-gray-800 shadow-lg sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 h-72 sm:h-80 md:h-96"> {{-- Adjusted padding and made height responsive --}}
-                <h3 class="text-md sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">Talent Competency Distribution</h3> {{-- Adjusted text size and margin --}}
-                <div class="relative h-full w-full">
+            <div class="bg-white dark:bg-gray-800 shadow-lg sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 h-72 sm:h-80 md:h-96">
+                <h3 class="text-md sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">Distribusi Kompetensi Talent</h3>
+                <div class="relative w-full pb-8" style="height: calc(100% - 0.5rem);">
                     <canvas id="competencyChart"></canvas>
                 </div>
             </div>
 
             {{-- User Management Section --}}
-            <div class="bg-white dark:bg-gray-800 shadow-lg sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6"> {{-- Adjusted padding --}}
-                <h3 class="text-md sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">User Management</h3> {{-- Adjusted text size and margin --}}
-                <livewire:admin.user-management />
-            </div>
-
+            <livewire:admin.user-management />
         </div>
     </div>
 
@@ -36,6 +32,9 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
+                const isDarkMode = document.documentElement.classList.contains('dark');
+                const textColor = isDarkMode ? '#ffffff' : '#000000';
+
                 const ctx = document.getElementById('competencyChart').getContext('2d');
                 new Chart(ctx, {
                     type: 'bar',
@@ -53,10 +52,16 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         scales: {
+                            x: {
+                                ticks: {
+                                    color: textColor
+                                }
+                            },
                             y: {
                                 beginAtZero: true,
                                 ticks: {
-                                    precision: 0
+                                    precision: 0,
+                                    color: textColor
                                 }
                             }
                         },

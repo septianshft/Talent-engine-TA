@@ -3,14 +3,14 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
         <div class="text-left">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">📚 Competencies</h1>
-            <p class="mt-1 text-gray-600 dark:text-gray-400">Manage available competencies.</p>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">📚 Kompetensi</h1>
+            <p class="mt-1 text-gray-600 dark:text-gray-400">Daftar Kompetensi Dalam Sistem.</p>
         </div>
         <a href="{{ route('admin.competencies.create') }}" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-offset-gray-800">
             <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
             </svg>
-            Create Competency
+            Tambah Kompetensi
         </a>
     </div>
 
@@ -31,9 +31,9 @@
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                    <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Name</th>
-                    <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Description</th>
-                    <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                    <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Nama</th>
+                    <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Deskripsi</th>
+                    <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -52,7 +52,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="3" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No competencies found.</td>
+                        <td colspan="3" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">Tidak ada Kompetensi Ditemukan.</td>
                     </tr>
                 @endforelse
             </tbody>

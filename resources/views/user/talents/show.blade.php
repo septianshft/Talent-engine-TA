@@ -5,7 +5,7 @@
             <nav class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
                 <a href="{{ route('user.talents.index') }}"
                    class="hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-200">
-                    Talent Discovery
+                    Temukan Talent
                 </a>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -180,7 +180,7 @@
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                                     <div class="flex items-center">
                                         <div class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900/50 rounded-[1.5rem] mr-3 sm:mr-4 flex-shrink-0">
-                                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400 rounded" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                                             </svg>
                                         </div>
@@ -278,26 +278,6 @@
                                         </div>
                                     @endforeach
                                 </div>
-
-                                <!-- Skills Summary Cards -->
-                                <div class="mt-6 sm:mt-8 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                                    @foreach([1 => 'Beginner', 2 => 'Intermediate', 3 => 'Advanced', 4 => 'Expert'] as $level => $levelName)
-                                        @php
-                                            $count = $talent->competencies->where('pivot.proficiency_level', $level)->count();
-                                            $colors = [
-                                                1 => 'yellow',
-                                                2 => 'blue',
-                                                3 => 'green',
-                                                4 => 'purple'
-                                            ];
-                                            $color = $colors[$level];
-                                        @endphp
-                                        <div class="bg-{{ $color }}-50 dark:bg-{{ $color }}-900/20 border border-{{ $color }}-200 dark:border-{{ $color }}-700 rounded-[1rem] p-3 sm:p-4 text-center hover:shadow-sm transition-shadow duration-200">
-                                            <div class="text-xl sm:text-2xl font-bold text-{{ $color }}-600 dark:text-{{ $color }}-400">{{ $count }}</div>
-                                            <div class="text-xs sm:text-sm text-{{ $color }}-600 dark:text-{{ $color }}-400 font-medium">{{ $levelName }}</div>
-                                        </div>
-                                    @endforeach
-                                </div>
                             </div>
                         @endif
                     </div>
@@ -332,6 +312,20 @@
                                         {{ $talent->competencies->where('pivot.proficiency_level', 3)->count() }}
                                     </span>
                                 </div>
+
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600 dark:text-gray-400">Intermediate Level</span>
+                                    <span class="font-semibold text-gray-900 dark:text-white">
+                                        {{ $talent->competencies->where('pivot.proficiency_level', 2)->count() }}
+                                    </span>
+                                </div>
+
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600 dark:text-gray-400">Beginner Level</span>
+                                    <span class="font-semibold text-gray-900 dark:text-white">
+                                        {{ $talent->competencies->where('pivot.proficiency_level', 1)->count() }}
+                                    </span>
+                                </div>
                             @endif
 
                             <div class="flex justify-between items-center">
@@ -344,7 +338,7 @@
                     </div>
 
                     <!-- Action Card -->
-                    <div class="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-4 sm:p-6 border border-purple-200 dark:border-purple-700">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-600">
                         <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
                             Interested in this talent?
                         </h3>
