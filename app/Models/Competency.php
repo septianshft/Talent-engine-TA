@@ -10,12 +10,28 @@ class Competency extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public $timestamps = true;
 
     /**
-     * The users (talents) that possess this competency.
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
      */
-    public function users()
+    protected $fillable = [
+        'name',
+        'description',
+        // Add other fillable attributes if any
+    ];
+
+    /**
+     * The users that possess this competency.
+     */
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'competency_user');
     }
@@ -25,7 +41,6 @@ class Competency extends Model
      */
     public function talentRequests(): BelongsToMany
     {
-        return $this->belongsToMany(TalentRequest::class, 'competency_talent_request')
-                    ->withPivot('required_proficiency_level');
+        return $this->belongsToMany(TalentRequest::class, 'competency_talent_request');
     }
 }

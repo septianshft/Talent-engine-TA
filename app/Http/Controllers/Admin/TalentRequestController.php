@@ -7,9 +7,10 @@ use App\Models\TalentRequest;
 use App\Models\User; // Import User model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth; // Although admin, might be useful for logging actions
-use App\Services\DecisionSupportService; // Import the DSS service
+use App\Services\EnhancedDecisionSupportService; // Import the Enhanced DSS service
 use Illuminate\Support\Facades\DB; // Import DB facade
 use Illuminate\Support\Facades\Log; // Import Log facade
+use Illuminate\Validation\ValidationException; // Import ValidationException
 
 class TalentRequestController extends Controller
 {
@@ -18,15 +19,36 @@ class TalentRequestController extends Controller
      */
     public function index(Request $request)
     {
-        // Add filtering/sorting logic if needed (e.g., by status)
-        // Corrected to use the new relationship 'assignedTalents'
-        $query = TalentRequest::with(['requestingUser', 'assignedTalents', 'competencies'])->latest(); // Eager load competencies
+        // Corrected to use the new relationship 'assignedTalents' and eager load pivot data
+        $query = TalentRequest::with(['requestingUser', 'assignedTalents', 'competencies'])->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
+        // Add location-based filtering
+        if ($request->filled('work_location_type')) {
+            $query->where('work_location_type', $request->work_location_type);
+        }
+
+        if ($request->filled('work_location_country')) {
+            $query->where('work_location_country', 'LIKE', '%' . $request->work_location_country . '%');
+        }
+
         $requests = $query->paginate(15);
+
+        // Add a flag to each request if it is pending_admin due to a direct offer rejection
+        $requests->getCollection()->transform(function ($talentRequest) {
+            $talentRequest->isPendingAdminAfterDirectOfferRejection = false;
+            if ($talentRequest->status === 'pending_admin') {
+                $talentRequest->isPendingAdminAfterDirectOfferRejection = $talentRequest->assignedTalents
+                                                                    ->where('pivot.assignment_type', 'direct_offer')
+                                                                    ->where('pivot.status', 'rejected_by_talent')
+                                                                    ->isNotEmpty();
+            }
+            return $talentRequest;
+        });
+
         // Define possible statuses as an associative array for filtering and display
         $statuses = [
             'pending_admin' => 'Pending Admin',
@@ -43,17 +65,56 @@ class TalentRequestController extends Controller
     /**
      * Display the specified talent request.
      */
-    public function show(TalentRequest $talentRequest, DecisionSupportService $dss)
+    public function show(TalentRequest $talentRequest, EnhancedDecisionSupportService $enhancedDss)
     {
         // Load required relationships
-        // Corrected to use the new relationship 'assignedTalents'
-        $talentRequest->load(['requestingUser', 'assignedTalents', 'competencies']); // Corrected relationship names
+        $talentRequest->load(['requestingUser', 'assignedTalents', 'competencies']); // Ensure pivot data is loaded
 
-        // Get ranked talent suggestions using the DSS
-        $rankedTalents = $dss->findAndRankTalents($talentRequest);
+        // Check if there is an active direct offer pending for this request
+        $hasDirectOfferPending = $talentRequest->assignedTalents()
+                                            ->wherePivot('status', 'direct_offer_pending')
+                                            ->exists();
 
-        // Pass both the request and the ranked talents to the view
-        return view('admin.talent-requests.show', compact('talentRequest', 'rankedTalents'));
+        // Check if the request is pending admin review due to a rejected direct offer
+        $isPendingAdminAfterDirectOfferRejection = false;
+        if ($talentRequest->status === 'pending_admin') {
+            $isPendingAdminAfterDirectOfferRejection = $talentRequest->assignedTalents()
+                                                                ->wherePivot('assignment_type', 'direct_offer')
+                                                                ->wherePivot('status', 'rejected_by_talent')
+                                                                ->exists();
+        }
+
+        $rankedTalents = collect(); // Initialize as empty collection
+        $methodologyExplanation = null;
+        $dssErrorMessage = null; // Initialize error message
+
+        try {
+            // Get ranked talent suggestions using the Enhanced DSS
+            $rankedTalents = $enhancedDss->findAndRankTalents($talentRequest);
+
+            // Get methodology explanation for transparency
+            $methodologyExplanation = $enhancedDss->getMethodologyExplanation();
+        } catch (ValidationException $e) {
+            // Handle validation errors (e.g., invalid weight distribution)
+            Log::warning('[Admin Controller] DSS validation error: ' . $e->getMessage());
+            // Set dssErrorMessage instead of redirecting back
+            $dssErrorMessage = 'Invalid competency configuration: ' . $e->getMessage();
+            // $rankedTalents and $methodologyExplanation remain as their initialized empty/null values
+        } catch (\Exception $e) { // Corrected: removed extra backslash before Exception
+            Log::error('[Admin Controller] DSS error: ' . $e->getMessage());
+            // $rankedTalents and $methodologyExplanation remain as their initialized empty/null values
+            $dssErrorMessage = 'An unexpected error occurred with the Decision Support System.'; // Generic error for other exceptions
+        }
+
+        // Pass both the request and the ranked talents to the view, including the direct offer status and rejection info
+        return view('admin.talent-requests.show', compact(
+            'talentRequest',
+            'rankedTalents',
+            'methodologyExplanation',
+            'dssErrorMessage',
+            'hasDirectOfferPending',
+            'isPendingAdminAfterDirectOfferRejection' // Add this new variable
+        ));
     }
 
     /**

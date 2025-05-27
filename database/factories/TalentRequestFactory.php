@@ -31,6 +31,9 @@ class TalentRequestFactory extends Factory
             'user_id' => User::factory(),
             'details' => $this->faker->paragraph,
             'status' => $this->faker->randomElement(['pending_admin', 'pending_review', 'in_progress', 'completed', 'cancelled']),
+            'work_location_type' => $this->faker->randomElement(['remote', 'on-site', 'hybrid']),
+            'work_location_country' => $this->faker->country,
+            'work_location_city' => $this->faker->city,
         ];
     }
 

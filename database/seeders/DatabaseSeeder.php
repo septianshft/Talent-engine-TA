@@ -52,9 +52,15 @@ class DatabaseSeeder extends Seeder
         // Create multiple Talent Users
         $numberOfTalentsToCreate = 350; // You can adjust this number
         for ($i = 0; $i < $numberOfTalentsToCreate; $i++) {
+            $city = $this->faker->city();
+            $country = $this->faker->country();
             $talentUser = User::factory()->create([
                 'name' => $this->faker->name . ' (Talent)',
                 'email' => $this->faker->unique()->safeEmail,
+                'domicile_city' => $city,
+                'domicile_country' => $country,
+                'location' => $city . ', ' . $country, // Seed the location field
+                // Add other talent-specific fields here if needed
             ]);
             $talentUser->roles()->attach($talentRole);
 

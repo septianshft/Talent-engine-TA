@@ -6,6 +6,7 @@ use App\Models\TalentRequest;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class DecisionSupportService
 {
@@ -103,7 +104,7 @@ class DecisionSupportService
         //    $maxProficiencyPossible = 5; // Define if normalizing proficiency
         //    $minProficiencyPossible = 1; // Define if normalizing proficiency
 
-        $rankedTalents = $potentialTalents->map(function ($talent) use ($normalizedCompetenciesData /*, $maxProficiencyPossible, $minProficiencyPossible */) {
+        $rankedTalents = $potentialTalents->map(function ($talent) use ($normalizedCompetenciesData, $talentRequest /*, $maxProficiencyPossible, $minProficiencyPossible */) {
             $score = 0;
 
             foreach ($normalizedCompetenciesData as $reqComp) {
@@ -123,18 +124,137 @@ class DecisionSupportService
                 }
             }
 
+            // Add location compatibility bonus to the score
+            $locationBonus = $this->calculateLocationCompatibility($talent, $talentRequest);
+            $score += $locationBonus;
+
             $talent->dss_score = $score; // Assign the calculated SAW score to the talent
-            Log::debug(sprintf("[DSS] Scoring Talent ID: %d, Calculated DSS Score: %f", $talent->id, $talent->dss_score));
+            $talent->location_compatibility = $locationBonus; // Store location bonus for display
+            Log::debug(sprintf("[DSS] Scoring Talent ID: %d, Base Score: %f, Location Bonus: %f, Total Score: %f",
+                $talent->id, $score - $locationBonus, $locationBonus, $talent->dss_score));
 
             return $talent;
         })
         ->sortByDesc('dss_score'); // Rank talents by their DSS score in descending order
 
-        Log::info(sprintf('[DSS] Found %d ranked talents after SAW scoring.', $rankedTalents->count()));
+        Log::info(sprintf('[DSS] Found %d ranked talents after SAW scoring with location compatibility.', $rankedTalents->count()));
 
         // 4. Return the top N ranked talents as per the specified limit.
         $finalTalents = $rankedTalents->take($limit);
         Log::info(sprintf('[DSS] Returning top %d talents.', $finalTalents->count()));
         return $finalTalents;
+    }
+
+    /**
+     * Calculate location compatibility bonus between talent and request
+     *
+     * @param User $talent
+     * @param TalentRequest $talentRequest
+     * @return float Location compatibility bonus (0.0 to 1.0)
+     */
+    private function calculateLocationCompatibility(User $talent, TalentRequest $talentRequest): float
+    {
+        $bonus = 0.0;
+
+        // If work is remote, location doesn't matter much - give small bonus
+        if ($talentRequest->work_location_type === 'remote') {
+            $bonus += 0.2;
+            Log::debug(sprintf("[DSS] Remote work bonus: 0.2 for talent ID: %d", $talent->id));
+            return $bonus;
+        }
+
+        // Check country compatibility
+        if ($talentRequest->work_location_country && $talent->domicile_country) {
+            if (strtolower($talentRequest->work_location_country) === strtolower($talent->domicile_country)) {
+                $bonus += 0.5; // Same country gets significant bonus
+                Log::debug(sprintf("[DSS] Same country bonus: 0.5 for talent ID: %d", $talent->id));
+
+                // Check city compatibility within same country
+                if ($talentRequest->work_location_city && $talent->domicile_city) {
+                    if (strtolower($talentRequest->work_location_city) === strtolower($talent->domicile_city)) {
+                        $bonus += 0.3; // Same city gets additional bonus
+                        Log::debug(sprintf("[DSS] Same city bonus: 0.3 for talent ID: %d", $talent->id));
+                    } else {
+                        // Different city in same country - check if it's a major city nearby
+                        $bonus += $this->calculateCityProximityBonus($talent->domicile_city, $talentRequest->work_location_city);
+                    }
+                }
+            } else {
+                // Different countries - check if they're in the same region
+                $bonus += $this->calculateRegionalProximityBonus($talent->domicile_country, $talentRequest->work_location_country);
+            }
+        }
+
+        // For hybrid work, give slight preference to those in similar time zones or regions
+        if ($talentRequest->work_location_type === 'hybrid') {
+            $bonus *= 0.8; // Reduce location importance for hybrid work
+        }
+
+        Log::debug(sprintf("[DSS] Total location compatibility bonus: %f for talent ID: %d", $bonus, $talent->id));
+        return min($bonus, 1.0); // Cap at 1.0
+    }
+
+    /**
+     * Calculate proximity bonus for cities within the same country
+     *
+     * @param string $talentCity
+     * @param string $requestCity
+     * @return float
+     */
+    private function calculateCityProximityBonus(string $talentCity, string $requestCity): float
+    {
+        // Define major city clusters (simplified)
+        $cityClusters = [
+            'indonesia_java' => ['jakarta', 'bandung', 'surabaya', 'semarang', 'yogyakarta', 'solo'],
+            'indonesia_sumatra' => ['medan', 'palembang', 'padang', 'pekanbaru'],
+            'malaysia_west' => ['kuala lumpur', 'petaling jaya', 'shah alam', 'klang', 'seremban'],
+            'singapore' => ['singapore city', 'jurong west', 'woodlands', 'tampines'],
+            'usa_west_coast' => ['los angeles', 'san francisco', 'seattle', 'san diego', 'san jose'],
+            'usa_east_coast' => ['new york', 'boston', 'philadelphia', 'washington dc', 'miami'],
+            'uk_main' => ['london', 'birmingham', 'manchester', 'liverpool', 'leeds'],
+        ];
+
+        $talentCityLower = strtolower($talentCity);
+        $requestCityLower = strtolower($requestCity);
+
+        foreach ($cityClusters as $cluster) {
+            if (in_array($talentCityLower, $cluster) && in_array($requestCityLower, $cluster)) {
+                return 0.15; // Cities in same cluster get small bonus
+            }
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Calculate regional proximity bonus for different countries
+     *
+     * @param string $talentCountry
+     * @param string $requestCountry
+     * @return float
+     */
+    private function calculateRegionalProximityBonus(string $talentCountry, string $requestCountry): float
+    {
+        // Define regional groupings
+        $regions = [
+            'southeast_asia' => ['indonesia', 'singapore', 'malaysia', 'thailand', 'philippines', 'vietnam', 'myanmar', 'brunei'],
+            'north_america' => ['united states', 'usa', 'canada'],
+            'europe_west' => ['united kingdom', 'germany', 'france', 'netherlands', 'belgium', 'switzerland'],
+            'europe_north' => ['norway', 'sweden', 'denmark', 'finland'],
+            'oceania' => ['australia', 'new zealand'],
+            'east_asia' => ['japan', 'south korea', 'china', 'taiwan'],
+            'middle_east' => ['uae', 'saudi arabia', 'qatar', 'kuwait', 'palestine'],
+        ];
+
+        $talentCountryLower = strtolower($talentCountry);
+        $requestCountryLower = strtolower($requestCountry);
+
+        foreach ($regions as $region) {
+            if (in_array($talentCountryLower, $region) && in_array($requestCountryLower, $region)) {
+                return 0.2; // Same region gets moderate bonus
+            }
+        }
+
+        return 0.0; // Different regions get no bonus
     }
 }

@@ -95,8 +95,16 @@ class TalentRequestManagementTest extends TestCase
             'status' => 'pending_admin'
         ]);
         $talentRequest->competencies()->attach([
-            $this->competency1->id => ['required_proficiency_level' => 2], // Intermediate PHP
-            $this->competency2->id => ['required_proficiency_level' => 3], // Advanced Laravel
+            $this->competency1->id => [
+                'required_proficiency_level' => 2,
+                'weight' => 4,
+                'is_critical' => false
+            ], // Intermediate PHP
+            $this->competency2->id => [
+                'required_proficiency_level' => 3,
+                'weight' => 3,
+                'is_critical' => false
+            ], // Advanced Laravel
         ]);
 
         // Act: Access the admin show page
@@ -109,7 +117,15 @@ class TalentRequestManagementTest extends TestCase
         $response->assertViewHas('rankedTalents'); // Check if the DSS results are passed
 
         // Optionally, assert that the specific talent is in the ranked list
-        $response->assertSeeText($this->talentUser->name);
+        $rankedTalentsData = $response->viewData('rankedTalents');
+        $foundTalent = false;
+        foreach ($rankedTalentsData as $rankedTalent) {
+            if ($rankedTalent['talent']->id === $this->talentUser->id) {
+                $foundTalent = true;
+                break;
+            }
+        }
+        $this->assertTrue($foundTalent, "The talentUser was not found in the rankedTalents list.");
     }
 
     /** @test */
@@ -146,17 +162,25 @@ class TalentRequestManagementTest extends TestCase
             'status' => 'pending_admin'
         ]);
 
-        // Act: Send a PATCH request to assign the talent
-        $response = $this->actingAs($this->adminUser)->patch(route('admin.talent-requests.assign', $talentRequest), [
-            'talent_id' => $this->talentUser->id,
+        // Act: Send a POST request to assign the talent
+        $response = $this->actingAs($this->adminUser)->post(route('admin.talent-requests.assign', $talentRequest), [
+            'talent_ids' => [$this->talentUser->id], // Send as an array
         ]);
 
         // Assert: Check for redirect and updated status/talent_id in the database
         $response->assertRedirect(route('admin.talent-requests.index'));
         $response->assertSessionHas('success');
+
+        // Check that the talent is assigned in the pivot table
+        $this->assertDatabaseHas('talent_request_assignments', [
+            'talent_request_id' => $talentRequest->id,
+            'user_id' => $this->talentUser->id,
+            'status' => 'pending_assignment_response' // Or whatever the default status is upon assignment
+        ]);
+
+        // Check that the main talent request status is updated
         $this->assertDatabaseHas('talent_requests', [
             'id' => $talentRequest->id,
-            'talent_id' => $this->talentUser->id,
             'status' => 'pending_talent',
         ]);
     }

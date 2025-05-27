@@ -28,6 +28,14 @@ class TalentRequest extends Model
         // 'talent_id', // Removed as it's now a many-to-many relationship
         'details',
         'status',
+        'required_competencies',
+        'work_location_type',
+        'work_location_country',
+        'work_location_city',
+    ];
+
+    protected $casts = [
+        'required_competencies' => 'array',
     ];
 
     /**
@@ -43,8 +51,8 @@ class TalentRequest extends Model
      */
     public function assignedTalents(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'talent_request_assignments', 'talent_request_id', 'talent_id')
-                    ->withPivot('status') // To get the status of each assignment
+        return $this->belongsToMany(User::class, 'talent_request_assignments', 'talent_request_id', 'user_id')
+                    ->withPivot('status', 'assignment_type', 'assigned_by') // Added assignment_type, assigned_by
                     ->withTimestamps(); // If you want to track when assignments are created/updated
     }
 
@@ -55,6 +63,6 @@ class TalentRequest extends Model
     {
         return $this->belongsToMany(Competency::class, 'competency_talent_request')
                     ->using(CompetencyTalentRequest::class) // Use the custom pivot model
-                    ->withPivot('required_proficiency_level', 'weight');
+                    ->withPivot('required_proficiency_level', 'weight', 'is_critical');
     }
 }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('competency_id')->constrained('competencies')->cascadeOnDelete();
             $table->foreignId('talent_request_id')->constrained('talent_requests')->cascadeOnDelete();
             $table->primary(['competency_id', 'talent_request_id']);
-            // No timestamps needed for this pivot table
+            $table->timestamps(); // Add timestamps
         });
     }
 

@@ -35,10 +35,12 @@ return new class extends Migration
         Schema::create('talent_request_assignments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('talent_request_id')->constrained('talent_requests')->cascadeOnDelete();
-            $table->foreignId('talent_id')->constrained('users')->cascadeOnDelete(); // This refers to the users table (talents are users)
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete(); // This refers to the users table (talents are users)
             $table->string('status')->default('pending_assignment_response');
+            $table->string('assignment_type'); // Added: e.g., 'direct_offer', 'dss_assigned'
+            $table->foreignId('assigned_by')->nullable()->constrained('users')->onDelete('set null'); // Added: User who made the offer/assignment
             $table->timestamps();
-            $table->unique(['talent_request_id', 'talent_id'], 'talent_request_talent_unique');
+            $table->unique(['talent_request_id', 'user_id'], 'talent_request_user_unique');
         });
     }
 

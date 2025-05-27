@@ -10,6 +10,8 @@ new class extends Component {
     public string $name = '';
     public string $email = '';
     public ?string $phone_number = ''; // Add phone number property
+    public ?string $domicile_country = ''; // Add domicile_country property
+    public ?string $domicile_city = ''; // Add domicile_city property
 
     /**
      * Mount the component.
@@ -19,6 +21,8 @@ new class extends Component {
         $this->name = Auth::user()->name;
         $this->email = Auth::user()->email;
         $this->phone_number = Auth::user()->phone_number; // Initialize phone number
+        $this->domicile_country = Auth::user()->domicile_country; // Initialize domicile_country
+        $this->domicile_city = Auth::user()->domicile_city; // Initialize domicile_city
     }
 
     /**
@@ -40,6 +44,8 @@ new class extends Component {
                 Rule::unique(User::class)->ignore($user->id)
             ],
             'phone_number' => ['nullable', 'string', 'max:20'], // Add validation for phone number
+            'domicile_country' => ['nullable', 'string', 'max:255'], // Add validation for domicile_country
+            'domicile_city' => ['nullable', 'string', 'max:255'], // Add validation for domicile_city
         ]);
 
         $user->fill($validated);
@@ -83,6 +89,10 @@ new class extends Component {
                 <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
 
                 <flux:input wire:model="phone_number" :label="__('Phone Number (Optional)')" type="tel" autocomplete="tel" />
+
+                <flux:input wire:model="domicile_country" :label="__('Domicile Country (Optional)')" type="text" autocomplete="country-name" />
+
+                <flux:input wire:model="domicile_city" :label="__('Domicile City (Optional)')" type="text" autocomplete="address-level2" />
 
                 @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail &&! auth()->user()->hasVerifiedEmail())
                     <div>

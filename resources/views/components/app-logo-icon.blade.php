@@ -1,1 +1,1 @@
-<img src="{{ asset('images/Logo_Fiks_PUI-11.png') }}" alt="{{ config('app.name') }} Logo" {{ $attributes }}>
+<img src="{{ asset('images/LogoPUI_Cropped_stroke.svg') }}" alt="{{ config('app.name') }} Logo" {{ $attributes }}>

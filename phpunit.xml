@@ -3,6 +3,7 @@
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
 >
     <testsuites>
         <testsuite name="Unit">
@@ -29,5 +30,9 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <!-- Force logging channel and level for tests -->
+        <env name="LOG_CHANNEL" value="stack"/>
+        <env name="LOG_STACK" value="single"/>
+        <env name="LOG_LEVEL" value="debug"/>
     </php>
 </phpunit>

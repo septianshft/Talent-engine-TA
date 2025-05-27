@@ -51,6 +51,31 @@
                 <dd class="mt-1 text-lg text-gray-900 dark:text-white whitespace-pre-wrap">{{ $talentRequest->details }}</dd>
             </div>
 
+            <div>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Work Location Type</dt>
+                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ Str::title(str_replace('_', ' ', $talentRequest->work_location_type)) }}</dd>
+            </div>
+
+            @if ($talentRequest->work_location_type !== 'remote')
+            <div>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Work Location City</dt>
+                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->work_location_city ?? 'N/A' }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Work Location Country</dt>
+                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->work_location_country ?? 'N/A' }}</dd>
+            </div>
+            @endif
+
+            <div>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Requester Domicile City</dt>
+                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->user->domicile_city ?? 'N/A' }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Requester Domicile Country</dt>
+                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->user->domicile_country ?? 'N/A' }}</dd>
+            </div>
+
             @if ($talentRequest->competencies && $talentRequest->competencies->count() > 0)
             <div class="md:col-span-2">
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Requested Competencies</dt>

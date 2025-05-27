@@ -20,9 +20,18 @@ Route::view('dashboard', 'dashboard')
 Route::middleware(['auth', 'verified', 'role:user'])->prefix('requests')->name('user.requests.')->group(function () {
     Route::get('/', [UserTalentRequestController::class, 'index'])->name('index');
     Route::get('/create', [UserTalentRequestController::class, 'create'])->name('create');
+    Route::get('/create-direct/{talent}', [UserTalentRequestController::class, 'createDirect'])->name('create-direct');
+    Route::post('/store-direct/{talent}', [UserTalentRequestController::class, 'storeDirect'])->name('store-direct');
     Route::post('/', [UserTalentRequestController::class, 'store'])->name('store');
     Route::get('/{talentRequest}', [UserTalentRequestController::class, 'show'])->name('show'); // Added show route
     Route::delete('/{talentRequest}', [UserTalentRequestController::class, 'destroy'])->name('destroy'); // Assuming users can delete their requests before approval
+});
+
+// User Talent Discovery Routes
+Route::middleware(['auth', 'verified', 'role:user'])->prefix('talents')->name('user.talents.')->group(function () {
+    Route::get('/', [App\Http\Controllers\User\TalentController::class, 'index'])->name('index');
+    Route::get('/search', [App\Http\Controllers\User\TalentController::class, 'search'])->name('search');
+    Route::get('/{talent}', [App\Http\Controllers\User\TalentController::class, 'show'])->name('show');
 });
 
 // Admin Dashboard Route
@@ -40,10 +49,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin/talent-requ
 });
 
 // Admin Competency Management
-Route::resource('admin/competencies', App\Http\Controllers\Admin\CompetencyController::class)
-    ->names('admin.competencies') // Explicitly set the route name prefix
-    ->middleware(['auth', 'verified', 'role:admin'])
-    ->except(['show']); // Assuming show view is not needed for simple competency names
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('competencies', CompetencyController::class);
+});
 
 // Talent Dashboard Route
 Route::view('talent/dashboard', 'talent.dashboard') // Assuming you will create a talent.dashboard view
@@ -54,7 +62,7 @@ Route::view('talent/dashboard', 'talent.dashboard') // Assuming you will create 
 Route::middleware(['auth', 'verified', 'role:talent'])->prefix('talent/requests')->name('talent.requests.')->group(function () {
     Route::get('/', [App\Http\Controllers\Talent\TalentRequestController::class, 'index'])->name('index'); // List received requests
     Route::get('/{talentRequest}', [App\Http\Controllers\Talent\TalentRequestController::class, 'show'])->name('show'); // View a specific request
-    Route::patch('/{talentRequest}', [App\Http\Controllers\Talent\TalentRequestController::class, 'update'])->name('update'); // Respond to a request (e.g., accept/reject)
+    Route::post('/{talentRequest}/respond', [App\Http\Controllers\Talent\TalentRequestController::class, 'respond'])->name('respond'); // New route for responding
 });
 
 Route::middleware(['auth'])->group(function () {

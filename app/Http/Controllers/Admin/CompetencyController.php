@@ -13,7 +13,7 @@ class CompetencyController extends Controller
      */
     public function index()
     {
-        $competencies = Competency::orderBy('name')->paginate(10); // Get competencies, ordered by name
+        $competencies = Competency::orderBy('name')->paginate(10);
         return view('admin.competencies.index', compact('competencies'));
     }
 
@@ -30,27 +30,29 @@ class CompetencyController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:competencies,name',
+        $request->validate([
+            'name' => 'required|string|max:255|unique:competencies',
+            'description' => 'nullable|string',
         ]);
 
-        Competency::create($validated);
+        Competency::create($request->all());
 
-        return redirect()->route('admin.competencies.index')->with('success', 'Competency created successfully.');
+        return redirect()->route('admin.competencies.index')
+                         ->with('success', 'Competency created successfully.');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Competency $competency)
     {
-        //
+        return view('admin.competencies.show', compact('competency'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Competency $competency) // Route model binding
+    public function edit(Competency $competency)
     {
         return view('admin.competencies.edit', compact('competency'));
     }
@@ -58,30 +60,27 @@ class CompetencyController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Competency $competency) // Route model binding
+    public function update(Request $request, Competency $competency)
     {
-        $validated = $request->validate([
-            // Ensure unique name, ignoring the current competency's name
-            'name' => 'required|string|max:255|unique:competencies,name,' . $competency->id,
+        $request->validate([
+            'name' => 'required|string|max:255|unique:competencies,name,'. $competency->id,
+            'description' => 'nullable|string',
         ]);
 
-        $competency->update($validated);
+        $competency->update($request->all());
 
-        return redirect()->route('admin.competencies.index')->with('success', 'Competency updated successfully.');
+        return redirect()->route('admin.competencies.index')
+                         ->with('success', 'Competency updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Competency $competency) // Route model binding
+    public function destroy(Competency $competency)
     {
-        // Optional: Add check if competency is in use before deleting
-        // if ($competency->users()->exists()) {
-        //     return back()->with('error', 'Cannot delete competency as it is assigned to users.');
-        // }
-
         $competency->delete();
 
-        return redirect()->route('admin.competencies.index')->with('success', 'Competency deleted successfully.');
+        return redirect()->route('admin.competencies.index')
+                         ->with('success', 'Competency deleted successfully.');
     }
 }

@@ -26,6 +26,8 @@ class User extends Authenticatable
         'password',
         // 'role', // Removed, using roles relationship now
         'phone_number',
+        'domicile_country',
+        'domicile_city',
     ];
 
     /**
@@ -84,7 +86,7 @@ class User extends Authenticatable
      */
     public function assignedRequests(): BelongsToMany
     {
-        return $this->belongsToMany(TalentRequest::class, 'talent_request_assignments', 'talent_id', 'talent_request_id')
+        return $this->belongsToMany(TalentRequest::class, 'talent_request_assignments', 'user_id', 'talent_request_id')
                     ->withPivot('status') // To get the status of each assignment
                     ->withTimestamps(); // If you want to track when assignments are created/updated
     }

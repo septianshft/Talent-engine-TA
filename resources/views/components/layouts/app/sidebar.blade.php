@@ -25,6 +25,7 @@
                     {{-- User Links --}}
                     @if (auth()->user()->hasRole('user'))
                         <flux:navlist.item icon="document-plus" :href="route('user.requests.index')" :current="request()->routeIs('user.requests.*')" wire:navigate>{{ __('My Requests') }}</flux:navlist.item>
+                        <flux:navlist.item icon="user-group" :href="route('user.talents.index')" :current="request()->routeIs('user.talents.*')" wire:navigate>{{ __('Discover Talents') }}</flux:navlist.item>
                         {{-- Add other user links here --}}
                     @endif
 

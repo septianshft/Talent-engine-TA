@@ -15,12 +15,13 @@ class TalentRequestController extends Controller
      */
     public function index()
     {
-        /** @var \App\Models\User $talent */
+        /** @var \\App\\Models\\User $talent */
         $talent = Auth::user();
-        // Get requests assigned to this talent where their specific assignment status is 'pending_assignment_response'
-        // The pivot table 'talent_request_assignments' should have a 'status' column
+
+        // Get requests assigned to this talent where their specific assignment status
+        // is either 'pending_assignment_response' (from admin) or 'direct_offer_pending' (direct from requester).
         $requests = $talent->assignedRequests()
-                           ->wherePivot('status', 'pending_assignment_response') // Assumes admin sets this status in pivot
+                           ->wherePivotIn('status', ['pending_assignment_response', 'direct_offer_pending'])
                            ->with('requestingUser') // Eager load the requesting user
                            ->latest('talent_request_assignments.created_at') // Order by when the assignment was created
                            ->paginate(10);
@@ -33,24 +34,25 @@ class TalentRequestController extends Controller
      */
     public function show(TalentRequest $talentRequest)
     {
-        /** @var \App\Models\User $talent */
+        /** @var \\App\\Models\\User $talent */
         $talent = Auth::user();
 
         // Check if the talent is assigned to this request and their assignment status is relevant
         $assignment = $talent->assignedRequests()
                               ->where('talent_request_id', $talentRequest->id)
-                              ->wherePivotIn('status', ['pending_assignment_response', 'approved_by_talent', 'rejected_by_talent']) // Talent can see if pending or already actioned
+                              ->wherePivotIn('status', ['pending_assignment_response', 'direct_offer_pending', 'approved_by_talent', 'rejected_by_talent']) // Talent can see if pending or already actioned
                               ->first();
 
         if (!$assignment) {
             abort(403, 'You are not authorized to view this request or your assignment status is not applicable.');
         }
 
-        // Pass the assignment details (including pivot status) to the view
+        // Pass the assignment details (including pivot status and type) to the view
         $talentRequest->load('requestingUser', 'competencies'); // Load requesting user and competencies
         $currentAssignmentStatus = $assignment->pivot->status;
+        $assignmentType = $assignment->pivot->assignment_type; // Pass assignment_type to the view
 
-        return view('talent.requests.show', compact('talentRequest', 'currentAssignmentStatus'));
+        return view('talent.requests.show', compact('talentRequest', 'currentAssignmentStatus', 'assignmentType'));
     }
 
     /**
@@ -96,6 +98,59 @@ class TalentRequestController extends Controller
         // For example, if all approved, set TalentRequest to 'awaiting_requester_confirmation'
         // If all rejected, set TalentRequest to 'closed_no_talent'
         // This logic might be complex and better handled in a service or observer.
+
+        return redirect()->route('talent.requests.index')->with('success', 'Your response has been recorded successfully.');
+    }
+
+    /**
+     * Handle the talent\'s response (approve/reject) to a talent request assignment.
+     * Specifically for direct offers or admin assignments awaiting talent action.
+     */
+    public function respond(Request $request, TalentRequest $talentRequest)
+    {
+        /** @var \\App\\Models\\User $talent */
+        $talent = Auth::user();
+
+        $validated = $request->validate([
+            'action' => ['required', 'in:approve,reject'],
+            // 'comments' => 'nullable|string|max:1000', // Future enhancement
+        ]);
+
+        // Find the specific assignment for this talent and request
+        $assignment = DB::table('talent_request_assignments')
+                        ->where('talent_request_id', $talentRequest->id)
+                        ->where('user_id', $talent->id)
+                        ->first();
+
+        if (!$assignment) {
+            return back()->with('error', 'You are not assigned to this request.');
+        }
+
+        if ($assignment->status !== 'direct_offer_pending' && $assignment->status !== 'pending_assignment_response') {
+            return back()->with('error', 'This request is not currently awaiting your response or has already been actioned.');
+        }
+
+        $newPivotStatus = $validated['action'] === 'approve' ? 'approved_by_talent' : 'rejected_by_talent';
+        $updateData = ['status' => $newPivotStatus];
+        // if (isset($validated[\'comments\'])) { // Future enhancement
+        //     $updateData[\'talent_comments\'] = $validated[\'comments\'];
+        // }
+
+        $talent->assignedRequests()->updateExistingPivot($talentRequest->id, $updateData);
+
+        if ($newPivotStatus === 'approved_by_talent' && $assignment->assignment_type === 'direct_offer') {
+            if ($talentRequest->status === 'pending_talent') {
+                $talentRequest->status = 'approved';
+                $talentRequest->save();
+            }
+        } elseif ($newPivotStatus === 'rejected_by_talent' && $assignment->assignment_type === 'direct_offer') {
+            // If a direct offer is rejected by the talent, set the request status to pending_admin
+            // so the admin can take further action.
+            if ($talentRequest->status === 'pending_talent') { // Ensure it was in the expected state
+                $talentRequest->status = 'pending_admin';
+                $talentRequest->save();
+            }
+        }
 
         return redirect()->route('talent.requests.index')->with('success', 'Your response has been recorded successfully.');
     }

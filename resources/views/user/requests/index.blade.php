@@ -9,11 +9,18 @@
             </h1>
             <p class="mt-1 text-gray-600 dark:text-gray-400">View and manage your requests for talent.</p>
         </div>
-        <a href="{{ route('user.requests.create') }}"
-           class="mt-4 sm:mt-0 inline-flex items-center px-5 py-2.5 text-sm font-medium text-center text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 rounded-lg shadow-md transition-all duration-300 ease-in-out">
-            <svg class="w-4 h-3 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
-            Create New Request
-        </a>
+        <div class="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-3">
+            <a href="{{ route('user.requests.create') }}"
+                class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-center text-white bg-blue-600 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 rounded-lg shadow-md transition-all duration-300 ease-in-out">
+                 <svg class="w-4 h-3 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
+                 Create Request
+            </a>
+            <a href="{{ route('user.talents.index') }}"
+               class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-center text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 rounded-lg shadow-md transition-all duration-300 ease-in-out">
+                <svg class="w-4 h-3 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+                Find Talent
+            </a>
+        </div>
     </div>
 
     <!-- Session Messages -->
@@ -37,6 +44,7 @@
                 <thead class="bg-gray-50 dark:bg-gray-700/50">
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Assigned Talents</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Work Location</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Details</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Overall Status</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Requested At</th>
@@ -51,6 +59,13 @@
                                     {{ $request->assignedTalents->count() }} talent(s) assigned
                                 @else
                                     N/A
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {{ Str::title(str_replace('_', ' ', $request->work_location_type)) }}
+                                @if($request->work_location_type !== 'remote')
+                                    <br>
+                                    <span class="text-xs">({{ $request->work_location_city }}, {{ $request->work_location_country }})</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate" title="{{ $request->details }}">{{ Str::limit($request->details, 50) }}</td>
@@ -129,13 +144,13 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center"> {{-- Adjusted colspan --}}
+                            <td colspan="6" class="px-6 py-12 text-center"> {{-- Adjusted colspan --}}
                                 <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                                     <svg class="w-12 h-12 mb-3 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
                                     <p class="text-lg font-semibold mb-1">No Talent Requests Found</p>
                                     <p class="text-sm">You haven't created any talent requests yet.</p>
-                                    <a href="{{ route('user.requests.create') }}" class="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors">
-                                        Create Your First Request
+                                    <a href="{{ route('user.talents.index') }}" class="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors">
+                                        Find Your First Talent
                                     </a>
                                 </div>
                             </td>
