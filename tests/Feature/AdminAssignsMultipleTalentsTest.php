@@ -57,7 +57,7 @@ class AdminAssignsMultipleTalentsTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.talent-requests.index'));
-        $response->assertSessionHas('success', 'Talents assigned successfully. Requests sent to talents for review.');
+        $response->assertSessionHas('success', 'Talents assigned/updated successfully. Requests sent to talents for review.');
 
         $this->talentRequest->refresh();
 
@@ -67,13 +67,15 @@ class AdminAssignsMultipleTalentsTest extends TestCase
         // Check pivot table entries and their status
         $this->assertDatabaseHas('talent_request_assignments', [
             'talent_request_id' => $this->talentRequest->id,
-            'talent_id' => $this->talent1->id,
-            'status' => 'pending_assignment_response' // Default status from migration
+            'user_id' => $this->talent1->id,
+            'status' => 'pending_assignment_response',
+            'assignment_type' => 'dss_assigned'
         ]);
         $this->assertDatabaseHas('talent_request_assignments', [
             'talent_request_id' => $this->talentRequest->id,
-            'talent_id' => $this->talent2->id,
-            'status' => 'pending_assignment_response' // Default status from migration
+            'user_id' => $this->talent2->id,
+            'status' => 'pending_assignment_response',
+            'assignment_type' => 'dss_assigned'
         ]);
     }
 }

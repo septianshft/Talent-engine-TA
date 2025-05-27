@@ -1,0 +1,207 @@
+@startuml TalentConnect_Class_Diagram
+!theme plain
+
+' Title and header
+title TalentConnect - Class Diagram\nTalent Management System
+note top : "Version 1.2.0 - May 2025\nLaravel-based Talent Matching Platform"
+
+' Define model classes
+package "Models" {
+    class User {
+        +id: int
+        +name: string
+        +email: string
+        +password: string
+        +phone_number: string
+        +domicile_country: string
+        +domicile_city: string
+        +email_verified_at: datetime
+        +remember_token: string
+        +created_at: timestamp
+        +updated_at: timestamp
+        --
+        +initials(): string
+        +hasRole(roleName: string): bool
+        --
+        +competencies(): BelongsToMany
+        +createdRequests(): HasMany
+        +assignedRequests(): BelongsToMany
+        +roles(): BelongsToMany
+    }
+
+    class Role {
+        +id: int
+        +name: string
+        +created_at: timestamp
+        +updated_at: timestamp
+        --
+        +users(): BelongsToMany
+    }
+
+    class TalentRequest {
+        +id: int
+        +user_id: int
+        +details: text
+        +status: enum
+        +required_competencies: json
+        +work_location_type: enum
+        +work_location_country: string
+        +work_location_city: string
+        +created_at: timestamp
+        +updated_at: timestamp
+        --
+        +requestingUser(): BelongsTo
+        +assignedTalents(): BelongsToMany
+        +competencies(): BelongsToMany
+    }
+
+    class Competency {
+        +id: int
+        +name: string
+        +description: text
+        +created_at: timestamp
+        +updated_at: timestamp
+        --
+        +users(): BelongsToMany
+        +talentRequests(): BelongsToMany
+    }
+
+    class CompetencyTalentRequest {
+        +competency_id: int
+        +talent_request_id: int
+        +required_proficiency_level: int
+        +weight: decimal
+        +is_critical: boolean
+        +created_at: timestamp
+        +updated_at: timestamp
+    }
+}
+
+package "Services" {
+    class EnhancedDecisionSupportService {
+        +MAX_SINGLE_WEIGHT_PERCENTAGE: float {static}
+        +COMPETENCY_WEIGHT_PERCENTAGE: float {static}
+        +LOCATION_WEIGHT_PERCENTAGE: float {static}
+        +MIN_PROFICIENCY_LEVEL: int {static}
+        +MAX_PROFICIENCY_LEVEL: int {static}
+        +VETO_THRESHOLD_PERCENTAGE: float {static}
+        +MIN_CONFIDENCE_SCORE: float {static}
+        --
+        +findAndRankTalents(request: TalentRequest, limit: int): Collection
+        +extractRequiredCompetencies(request: TalentRequest): Collection
+        +validateWeightDistribution(competencies: Collection): bool
+        +filterQualifiedTalents(talents: Collection, competencies: Collection): Collection
+        +normalizePerformanceValues(talents: Collection, competencies: Collection): Collection
+        +calculateEnhancedSAWScores(talents: Collection, competencies: Collection, request: TalentRequest): Collection
+        +calculateLocationCompatibility(talent: User, request: TalentRequest): float
+        +calculateConfidenceScore(talent: User, competencies: Collection): float
+        +generateMethodologyExplanation(): string
+        +performSensitivityAnalysis(talents: Collection, competencies: Collection): array
+    }
+}
+
+package "Controllers" {
+    class TalentRequestController {
+        +index(): View
+        +create(): View
+        +createDirect(talent: User): View
+        +store(request: TalentRequestRequest): RedirectResponse
+        +storeDirect(request: Request, talent: User): RedirectResponse
+        +show(talentRequest: TalentRequest): View
+        +destroy(talentRequest: TalentRequest): RedirectResponse
+    }
+
+    class AdminTalentRequestController {
+        +index(): View
+        +show(talentRequest: TalentRequest): View
+        +assign(request: Request, talentRequest: TalentRequest): RedirectResponse
+        +reject(talentRequest: TalentRequest): RedirectResponse
+        +complete(talentRequest: TalentRequest): RedirectResponse
+    }
+}
+
+package "Requests" {
+    class TalentRequestRequest {
+        +authorize(): bool
+        +rules(): array
+        +messages(): array
+        +validated(): array
+    }
+}
+
+' Define pivot tables as associations
+class "role_user" as RoleUser {
+    +user_id: int
+    +role_id: int
+    +created_at: timestamp
+    +updated_at: timestamp
+}
+
+class "competency_user" as CompetencyUser {
+    +user_id: int
+    +competency_id: int
+    +proficiency_level: int
+    +created_at: timestamp
+    +updated_at: timestamp
+}
+
+class "talent_request_assignments" as TalentRequestAssignments {
+    +talent_request_id: int
+    +user_id: int
+    +status: enum
+    +assignment_type: enum
+    +assigned_by: int
+    +created_at: timestamp
+    +updated_at: timestamp
+}
+
+' Define relationships
+User ||--o{ TalentRequest : "creates"
+User ||--o{ TalentRequestAssignments : "assigned to"
+TalentRequest ||--o{ TalentRequestAssignments : "has assignments"
+TalentRequest ||--o{ CompetencyTalentRequest : "requires"
+Competency ||--o{ CompetencyTalentRequest : "used in"
+Competency ||--o{ CompetencyUser : "possessed by"
+User ||--o{ CompetencyUser : "has competencies"
+User ||--o{ RoleUser : "has roles"
+Role ||--o{ RoleUser : "assigned to"
+
+' Service dependencies
+TalentRequestController ..> EnhancedDecisionSupportService : "uses"
+AdminTalentRequestController ..> EnhancedDecisionSupportService : "uses"
+TalentRequestController ..> TalentRequestRequest : "validates with"
+
+' Model relationships (detailed)
+User::competencies --> CompetencyUser
+User::roles --> RoleUser
+User::createdRequests --> TalentRequest
+User::assignedRequests --> TalentRequestAssignments
+TalentRequest::competencies --> CompetencyTalentRequest
+TalentRequest::assignedTalents --> TalentRequestAssignments
+Competency::users --> CompetencyUser
+Competency::talentRequests --> CompetencyTalentRequest
+
+note right of EnhancedDecisionSupportService
+  Implements SAW (Simple Additive Weighting) algorithm
+  - Competency scoring: 85% weight
+  - Location scoring: 15% weight
+  - Veto thresholds for minimum requirements
+  - Confidence metrics for recommendations
+end note
+
+note bottom of TalentRequest
+  Status values:
+  - pending_admin
+  - pending_talent
+  - approved
+  - rejected
+  - completed
+end note
+
+note bottom of CompetencyTalentRequest
+  Weight values: 0.0 - 1.0
+  Proficiency levels: 1-5
+  Critical flag for veto thresholds
+end note
+
+@enduml

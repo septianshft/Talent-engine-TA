@@ -166,12 +166,11 @@ test('fails validation with invalid competency weight', function () {
         'details' => 'Test details',
         'work_location_type' => 'remote',
         'competencies' => [
-            ['id' => $this->competency1->id, 'level' => 3, 'weight' => 6], // Weight should be 1-5
+            ['id' => $this->competency1->id, 'level' => 3, 'weight' => 101], // Weight should be 0-100
         ],
     ];
 
-    $response = $this->withoutMiddleware()
-                     ->post(route('user.requests.store'), $requestData);
+    $response = $this->post(route('user.requests.store'), $requestData);
 
     $response->assertSessionHasErrors('competencies.0.weight');
 });
@@ -217,8 +216,14 @@ test('can create direct talent request', function () {
 
     // Create a talent user
     $talent = User::factory()->create();
-    $talentRole = Role::where('name', 'talent')->first();
+    $talentRole = Role::firstOrCreate(['name' => 'talent']);
     $talent->roles()->attach($talentRole);
+
+    // Ensure the role is properly saved and loaded
+    $talent->load('roles');
+
+    // Debug: verify role assignment worked
+    expect($talent->hasRole('talent'))->toBeTrue();
 
     $requestData = [
         'details' => 'Direct request for specific talent.',
@@ -229,8 +234,7 @@ test('can create direct talent request', function () {
         ],
     ];
 
-    $response = $this->withoutMiddleware()
-                     ->post(route('user.requests.store'), $requestData);
+    $response = $this->post(route('user.requests.store'), $requestData);
 
     $response->assertRedirect(route('user.requests.index'));
     $response->assertSessionHas('success');

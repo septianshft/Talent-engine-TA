@@ -1,0 +1,155 @@
+@startuml TalentConnect_Activity_Diagram_DSS
+!theme plain
+
+title TalentConnect - Enhanced DSS Activity Diagram
+note top : "Decision Support System Workflow\nSAW Algorithm Implementation"
+
+:Admin selects talent request;
+:Load request details and competencies;
+
+if (Request has competency requirements?) then (yes)
+    :Extract competency requirements;
+    :Get competency weights from request;
+
+    if (Weight distribution valid?) then (yes)
+        :Fetch all users with 'talent' role;
+
+        fork
+            :Filter talents by required competencies;
+        fork again
+            :Check minimum proficiency levels;
+        fork again
+            :Apply veto thresholds (80% rule);
+        end fork
+
+        if (Qualified talents found?) then (yes)
+            partition "SAW Algorithm Process" {
+                :Initialize scoring arrays;
+
+                repeat
+                    :For each qualified talent;
+
+                    fork
+                        partition "Competency Scoring (85%)" {
+                            repeat
+                                :Get talent's proficiency level;
+                                :Normalize proficiency (level/5);
+                                :Apply competency weight;
+                                :Calculate weighted score;
+                            repeat while (More competencies?)
+                            :Sum all competency scores;
+                        }
+                    fork again
+                        partition "Location Scoring (15%)" {
+                            :Check country match;
+                            :Calculate city proximity;
+                            :Assess timezone compatibility;
+                            :Combine location factors;
+                        }
+                    end fork
+
+                    :Calculate final SAW score;
+                    note right
+                        Final Score =
+                        (Competency Score × 0.85) +
+                        (Location Score × 0.15)
+                    end note
+
+                    :Calculate confidence score;
+                    if (Confidence ≥ 60%?) then (yes)
+                        :Add to results;
+                    else (no)
+                        :Mark as low confidence;
+                    endif
+
+                repeat while (More talents to process?)
+            }
+
+            :Sort talents by final score (descending);
+
+            partition "Enhanced Features" {
+                :Perform sensitivity analysis;
+                :Generate methodology explanation;
+                :Calculate score variance;
+                :Identify top recommendations;
+            }
+
+            if (Results found?) then (yes)
+                :Format results with breakdowns;
+                :Include confidence indicators;
+                :Add explanatory notes;
+                :Display ranked talent list;
+                stop
+            else (no)
+                :Show "no suitable candidates" message;
+                :Suggest adjusting criteria;
+                stop
+            endif
+
+        else (no)
+            :Log qualification failure;
+            :Show "no qualified talents" message;
+            :Suggest competency requirements review;
+            stop
+        endif
+
+    else (no)
+        :Log weight validation error;
+        :Show weight distribution error;
+        :Suggest weight adjustment;
+        stop
+    endif
+
+else (no)
+    :Show all available talents;
+    :Sort by general criteria;
+    note right
+        Fallback when no specific
+        competencies are required
+    end note
+    stop
+endif
+
+' Error handling flows
+partition "Error Handling" {
+    if (Database error?) then (yes)
+        :Log error details;
+        :Show graceful error message;
+        :Provide fallback options;
+        stop
+    endif
+
+    if (Calculation error?) then (yes)
+        :Log calculation failure;
+        :Use simplified ranking;
+        :Notify admin of limitations;
+        stop
+    endif
+}
+
+note right of "SAW Algorithm Process"
+    Enhanced SAW Features:
+    • Weighted competency scoring
+    • Multi-factor location analysis
+    • Confidence-based filtering
+    • Veto threshold enforcement
+    • Sensitivity analysis
+end note
+
+note left of "Competency Scoring (85%)"
+    Competency Weight Validation:
+    • Individual weights: 0-100%
+    • Total can exceed 100%
+    • Academic compliance optional
+    • Real-time validation
+end note
+
+note right of "Location Scoring (15%)"
+    Location Factors:
+    • Country match (40%)
+    • City proximity (40%)
+    • Timezone alignment (20%)
+    • Work type compatibility
+end note
+
+@enduml

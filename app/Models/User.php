@@ -107,6 +107,12 @@ class User extends Authenticatable
      */
     public function hasRole(string $roleName): bool
     {
+        // First check if roles are already loaded to avoid unnecessary queries
+        if ($this->relationLoaded('roles')) {
+            return $this->roles->contains('name', $roleName);
+        }
+
+        // Fall back to database query if relationship is not loaded
         return $this->roles()->where('name', $roleName)->exists();
     }
 }

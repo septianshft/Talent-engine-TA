@@ -1,0 +1,177 @@
+@startuml TalentConnect_UseCase_Diagram
+!theme plain
+
+title TalentConnect - Use Case Diagram
+note top : "Version 1.2.0 - May 2025\nTalent Management System"
+
+' Define actors
+actor "Requesting User" as User
+actor "Administrator" as Admin
+actor "Talent" as Talent
+actor "System" as System
+
+' Define system boundary
+rectangle "TalentConnect System" {
+
+    ' Authentication & Profile Management
+    package "Authentication & Profile" {
+        usecase "Register Account" as UC1
+        usecase "Login/Logout" as UC2
+        usecase "Update Profile" as UC3
+        usecase "Manage Competencies" as UC4
+        usecase "View Dashboard" as UC5
+    }
+
+    ' Talent Request Management
+    package "Talent Request Management" {
+        usecase "Create Talent Request" as UC6
+        usecase "Create Direct Request" as UC7
+        usecase "View My Requests" as UC8
+        usecase "Edit Request Details" as UC9
+        usecase "Delete Request" as UC10
+        usecase "Specify Competency Weights" as UC11
+    }
+
+    ' Admin Functions
+    package "Administrative Functions" {
+        usecase "Review Talent Requests" as UC12
+        usecase "View DSS Rankings" as UC13
+        usecase "Assign Talent to Request" as UC14
+        usecase "Reject Request" as UC15
+        usecase "Mark Request Complete" as UC16
+        usecase "Manage User Roles" as UC17
+        usecase "View System Analytics" as UC18
+    }
+
+    ' Talent Functions
+    package "Talent Functions" {
+        usecase "View Assigned Requests" as UC19
+        usecase "Accept Assignment" as UC20
+        usecase "Reject Assignment" as UC21
+        usecase "Update Availability" as UC22
+        usecase "View Performance History" as UC23
+    }
+
+    ' DSS Functions
+    package "Decision Support System" {
+        usecase "Calculate SAW Scores" as UC24
+        usecase "Generate Talent Rankings" as UC25
+        usecase "Perform Competency Matching" as UC26
+        usecase "Calculate Location Compatibility" as UC27
+        usecase "Generate Confidence Metrics" as UC28
+        usecase "Provide Methodology Explanation" as UC29
+    }
+
+    ' System Functions
+    package "System Functions" {
+        usecase "Send Notifications" as UC30
+        usecase "Log System Events" as UC31
+        usecase "Validate Data Integrity" as UC32
+        usecase "Generate Reports" as UC33
+    }
+}
+
+' User relationships
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC8
+User --> UC9
+User --> UC10
+User --> UC11
+
+' Admin relationships
+Admin --> UC2
+Admin --> UC5
+Admin --> UC12
+Admin --> UC13
+Admin --> UC14
+Admin --> UC15
+Admin --> UC16
+Admin --> UC17
+Admin --> UC18
+
+' Talent relationships
+Talent --> UC2
+Talent --> UC3
+Talent --> UC4
+Talent --> UC5
+Talent --> UC19
+Talent --> UC20
+Talent --> UC21
+Talent --> UC22
+Talent --> UC23
+
+' System relationships
+System --> UC24
+System --> UC25
+System --> UC26
+System --> UC27
+System --> UC28
+System --> UC29
+System --> UC30
+System --> UC31
+System --> UC32
+System --> UC33
+
+' Include relationships
+UC6 .> UC11 : <<include>>
+UC7 .> UC11 : <<include>>
+UC12 .> UC13 : <<include>>
+UC13 .> UC24 : <<include>>
+UC13 .> UC25 : <<include>>
+UC24 .> UC26 : <<include>>
+UC24 .> UC27 : <<include>>
+UC24 .> UC28 : <<include>>
+UC14 .> UC30 : <<include>>
+UC20 .> UC30 : <<include>>
+UC21 .> UC30 : <<include>>
+
+' Extend relationships
+UC6 <. UC7 : <<extend>>
+UC14 <. UC15 : <<extend>>
+UC25 <. UC29 : <<extend>>
+
+' Generalization relationships
+UC2 <|-- "Multi-Factor Authentication"
+UC4 <|-- "Competency Proficiency Setting"
+UC13 <|-- "Advanced Filtering"
+
+' Notes for complex use cases
+note right of UC24
+    Implements Enhanced SAW Algorithm:
+    - Competency scoring (85% weight)
+    - Location scoring (15% weight)
+    - Veto thresholds
+    - Confidence calculation
+end note
+
+note right of UC11
+    Weight Assignment Features:
+    - Percentage-based weights (0-100%)
+    - Real-time weight validation
+    - Academic compliance checking
+    - Dynamic UI updates
+end note
+
+note right of UC13
+    DSS Integration:
+    - Real-time talent ranking
+    - Score breakdown visualization
+    - Confidence indicators
+    - Sensitivity analysis
+end note
+
+note bottom of UC7
+    Direct Request Bypass:
+    - Skips admin approval
+    - Direct talent notification
+    - Immediate assignment
+    - Faster workflow
+end note
+
+@enduml

@@ -120,28 +120,47 @@ class TalentRequestController extends Controller
     /**
      * Update the specified talent request status (Admin rejection).
      * This method specifically handles the admin rejecting a request *before* assignment.
+     * Phase 1 Fix: Enhanced error handling and transaction safety
      */
     public function update(Request $request, TalentRequest $talentRequest)
     {
-        $validated = $request->validate([
-            'action' => 'required|in:reject', // Only allow 'reject' action here
-            // Add validation for admin comments if needed
-        ]);
+        try {
+            $validated = $request->validate([
+                'action' => 'required|in:reject', // Only allow 'reject' action here
+                // Add validation for admin comments if needed
+            ]);
 
-        // Ensure the request is pending admin approval
-        if ($talentRequest->status !== 'pending_admin') {
-            return back()->with('error', 'This request is not awaiting admin approval/rejection.');
+            // Ensure the request is pending admin approval
+            if ($talentRequest->status !== 'pending_admin') {
+                return back()->with('error', 'This request is not awaiting admin approval/rejection.');
+            }
+
+            // Use transaction for data consistency
+            return DB::transaction(function () use ($talentRequest) {
+                // Action must be 'reject'
+                $newStatus = 'rejected_admin';
+                $talentRequest->update(['status' => $newStatus]);
+
+                // Log admin action for audit trail
+                Log::info('[Admin] Request rejected', [
+                    'request_id' => $talentRequest->id,
+                    'admin_id' => Auth::id(),
+                    'previous_status' => 'pending_admin',
+                    'new_status' => $newStatus
+                ]);
+
+                return redirect()->route('admin.talent-requests.index')->with('success', 'Request rejected successfully.');
+            });
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('[Admin] Error rejecting request: ' . $e->getMessage(), [
+                'request_id' => $talentRequest->id,
+                'admin_id' => Auth::id()
+            ]);
+
+            return back()->with('error', 'An error occurred while rejecting the request. Please try again.');
         }
-
-        // Action must be 'reject'
-        $newStatus = 'rejected_admin';
-        // Optional: Notify the requesting user
-
-        $talentRequest->update(['status' => $newStatus]);
-
-        // Optional: Log admin action
-
-        return redirect()->route('admin.talent-requests.index')->with('success', 'Request rejected successfully.');
     }
 
     /**
@@ -170,8 +189,12 @@ class TalentRequestController extends Controller
                         Log::warning("[DSS] Attempted to assign non-talent user ID {$talentId} to request ID {$talentRequest->id}. Skipping this user.");
                         continue; // Skip this assignment if user is not a talent
                     }
-                    // Prepare for sync with the required pivot status
-                    $assignmentsToSync[$talentId] = ['status' => 'pending_assignment_response'];
+                    // Prepare for sync with the required pivot status and assignment_type
+                    $assignmentsToSync[$talentId] = [
+                        'status' => 'pending_assignment_response',
+                        'assignment_type' => 'dss_assigned',
+                        'assigned_by' => Auth::id()
+                    ];
                 }
 
                 if (empty($assignmentsToSync)) {
@@ -224,19 +247,37 @@ class TalentRequestController extends Controller
 
     /**
      * Mark the specified talent request as completed.
+     * Phase 1 Fix: Enhanced error handling and transaction safety
      */
     public function markAsCompleted(TalentRequest $talentRequest)
     {
-        // Ensure the request is currently approved before marking as completed
-        if ($talentRequest->status !== 'approved') {
-            return back()->with('error', 'Only approved requests can be marked as completed.');
+        try {
+            // Ensure the request is currently approved before marking as completed
+            if ($talentRequest->status !== 'approved') {
+                return back()->with('error', 'Only approved requests can be marked as completed.');
+            }
+
+            return DB::transaction(function () use ($talentRequest) {
+                $previousStatus = $talentRequest->status;
+                $talentRequest->update(['status' => 'completed']);
+
+                // Log admin action for audit trail
+                Log::info('[Admin] Request marked as completed', [
+                    'request_id' => $talentRequest->id,
+                    'admin_id' => Auth::id(),
+                    'previous_status' => $previousStatus,
+                    'new_status' => 'completed'
+                ]);
+
+                return redirect()->route('admin.talent-requests.index')->with('success', 'Request marked as completed successfully.');
+            });
+        } catch (\Exception $e) {
+            Log::error('[Admin] Error marking request as completed: ' . $e->getMessage(), [
+                'request_id' => $talentRequest->id,
+                'admin_id' => Auth::id()
+            ]);
+
+            return back()->with('error', 'An error occurred while marking the request as completed. Please try again.');
         }
-
-        $talentRequest->update(['status' => 'completed']);
-
-        // Optional: Log admin action
-        // Optional: Notify user/talent
-
-        return redirect()->route('admin.talent-requests.index')->with('success', 'Request marked as completed successfully.');
     }
 }

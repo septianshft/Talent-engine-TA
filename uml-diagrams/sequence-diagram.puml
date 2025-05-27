@@ -1,0 +1,149 @@
+@startuml TalentConnect_Sequence_Diagram
+!theme plain
+
+title TalentConnect - Talent Request Workflow Sequence Diagram
+note over User, Database : "Version 1.2.0 - May 2025"
+
+actor User as "Requesting User"
+actor Admin as "Administrator"
+actor Talent as "Talent User"
+participant TalentRequestController as "Controller"
+participant TalentRequestRequest as "Request\nValidation"
+participant EnhancedDSS as "Enhanced DSS\nService"
+participant TalentRequest as "TalentRequest\nModel"
+participant Database as "Database"
+
+== Regular Talent Request Flow ==
+
+User -> TalentRequestController: create()
+activate TalentRequestController
+TalentRequestController -> Database: fetch competencies
+TalentRequestController --> User: show create form
+deactivate TalentRequestController
+
+User -> TalentRequestController: store(request)
+activate TalentRequestController
+TalentRequestController -> TalentRequestRequest: validate()
+activate TalentRequestRequest
+TalentRequestRequest -> TalentRequestRequest: check competency weights
+TalentRequestRequest -> TalentRequestRequest: validate required fields
+TalentRequestRequest --> TalentRequestController: validated data
+deactivate TalentRequestRequest
+
+TalentRequestController -> Database: begin transaction
+TalentRequestController -> TalentRequest: create()
+activate TalentRequest
+TalentRequest -> Database: insert talent_requests
+TalentRequest -> Database: attach competencies with weights
+TalentRequest --> TalentRequestController: created request
+deactivate TalentRequest
+TalentRequestController -> Database: commit transaction
+TalentRequestController --> User: redirect with success
+deactivate TalentRequestController
+
+== Admin Review Process ==
+
+Admin -> AdminTalentRequestController: index()
+activate AdminTalentRequestController
+AdminTalentRequestController -> Database: fetch pending requests
+AdminTalentRequestController --> Admin: show requests list
+deactivate AdminTalentRequestController
+
+Admin -> AdminTalentRequestController: show(request)
+activate AdminTalentRequestController
+AdminTalentRequestController -> EnhancedDSS: findAndRankTalents()
+activate EnhancedDSS
+
+EnhancedDSS -> EnhancedDSS: extractRequiredCompetencies()
+EnhancedDSS -> EnhancedDSS: validateWeightDistribution()
+EnhancedDSS -> Database: fetch qualified talents
+EnhancedDSS -> EnhancedDSS: filterQualifiedTalents()
+
+loop for each talent
+    EnhancedDSS -> EnhancedDSS: normalizePerformanceValues()
+    EnhancedDSS -> EnhancedDSS: calculateEnhancedSAWScores()
+    EnhancedDSS -> EnhancedDSS: calculateLocationCompatibility()
+    EnhancedDSS -> EnhancedDSS: calculateConfidenceScore()
+end
+
+EnhancedDSS -> EnhancedDSS: performSensitivityAnalysis()
+EnhancedDSS --> AdminTalentRequestController: ranked talents
+deactivate EnhancedDSS
+
+AdminTalentRequestController --> Admin: show request with ranked talents
+deactivate AdminTalentRequestController
+
+== Admin Assignment ==
+
+Admin -> AdminTalentRequestController: assign(talent)
+activate AdminTalentRequestController
+AdminTalentRequestController -> Database: begin transaction
+AdminTalentRequestController -> TalentRequest: attachTalent()
+activate TalentRequest
+TalentRequest -> Database: insert talent_request_assignments
+TalentRequest -> Database: update request status
+TalentRequest --> AdminTalentRequestController: assignment created
+deactivate TalentRequest
+AdminTalentRequestController -> Database: commit transaction
+AdminTalentRequestController --> Admin: redirect with success
+deactivate AdminTalentRequestController
+
+== Talent Response ==
+
+Talent -> TalentController: viewAssignment()
+activate TalentController
+TalentController -> Database: fetch assignment details
+TalentController --> Talent: show assignment
+deactivate TalentController
+
+Talent -> TalentController: respondToAssignment(accept/reject)
+activate TalentController
+TalentController -> Database: update assignment status
+TalentController -> Database: update request status if accepted
+TalentController --> Talent: redirect with response confirmation
+deactivate TalentController
+
+== Direct Talent Request Flow ==
+
+User -> TalentRequestController: createDirect(talent)
+activate TalentRequestController
+TalentRequestController -> Database: verify talent role
+TalentRequestController -> Database: fetch talent competencies
+TalentRequestController --> User: show direct request form
+deactivate TalentRequestController
+
+User -> TalentRequestController: storeDirect(request, talent)
+activate TalentRequestController
+TalentRequestController -> TalentRequestController: validate request
+TalentRequestController -> Database: begin transaction
+TalentRequestController -> TalentRequest: create(status='pending_talent')
+activate TalentRequest
+TalentRequest -> Database: insert talent_requests
+TalentRequest -> Database: immediately assign talent
+TalentRequest -> Database: attach competencies
+TalentRequest --> TalentRequestController: direct request created
+deactivate TalentRequest
+TalentRequestController -> Database: commit transaction
+TalentRequestController --> User: redirect with success
+deactivate TalentRequestController
+
+note over Talent
+  Talent receives notification
+  and can accept/reject directly
+end note
+
+== Error Handling ==
+
+alt Validation Error
+    TalentRequestRequest --> TalentRequestController: validation exception
+    TalentRequestController --> User: redirect with errors
+else Database Error
+    Database --> TalentRequestController: exception
+    TalentRequestController -> Database: rollback transaction
+    TalentRequestController --> User: redirect with error message
+else DSS Calculation Error
+    EnhancedDSS --> AdminTalentRequestController: calculation exception
+    AdminTalentRequestController --> Admin: show error with fallback
+end
+
+@enduml

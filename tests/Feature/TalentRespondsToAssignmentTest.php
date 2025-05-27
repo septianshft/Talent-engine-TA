@@ -59,6 +59,7 @@ class TalentRespondsToAssignmentTest extends TestCase
         Log::info('SETUP: Attaching talent ID: ' . $this->talent->id . ' (Role: ' . ($this->talent->roles->first()->name ?? 'N/A') . ') to TalentRequest ID: ' . $this->talentRequest->id . ' (Requester ID: ' . $this->talentRequest->user_id . ')');
         $this->talentRequest->assignedTalents()->attach($this->talent->id, [
             'status' => 'pending_assignment_response',
+            'assignment_type' => 'dss_assigned', // Add required assignment_type field
             // created_at and updated_at are handled by withTimestamps() on the relationship
         ]);
 
@@ -104,11 +105,8 @@ class TalentRespondsToAssignmentTest extends TestCase
         $this->assertNotNull($assignedTalent, "Talent should be assigned to the request.");
         $this->assertNotNull($assignedTalent->pivot, "Pivot data should exist for the assignment.");
 
-        $response = $this->patchJson(route('talent.requests.respond', [
-            'talent_request_id' => $this->talentRequest->id,
-            'talent_id' => $this->talent->id
-        ]), [
-            'status' => 'accepted'
+        $response = $this->postJson(route('talent.requests.respond', $this->talentRequest->id), [
+            'action' => 'approve'
         ]);
 
         $response->assertRedirect();
@@ -116,7 +114,7 @@ class TalentRespondsToAssignmentTest extends TestCase
         $this->assertDatabaseHas('talent_request_assignments', [
             'talent_request_id' => $this->talentRequest->id,
             'user_id' => $this->talent->id,
-            'status' => 'accepted'
+            'status' => 'approved_by_talent'
         ]);
     }
 
@@ -130,11 +128,8 @@ class TalentRespondsToAssignmentTest extends TestCase
         $this->assertNotNull($assignedTalent, "Talent should be assigned to the request for rejection.");
         $this->assertNotNull($assignedTalent->pivot, "Pivot data should exist for the assignment for rejection.");
 
-        $response = $this->patchJson(route('talent.requests.respond', [
-            'talent_request_id' => $this->talentRequest->id,
-            'talent_id' => $this->talent->id
-        ]), [
-            'status' => 'rejected'
+        $response = $this->postJson(route('talent.requests.respond', $this->talentRequest->id), [
+            'action' => 'reject'
         ]);
 
         $response->assertRedirect();
@@ -142,7 +137,7 @@ class TalentRespondsToAssignmentTest extends TestCase
         $this->assertDatabaseHas('talent_request_assignments', [
             'talent_request_id' => $this->talentRequest->id,
             'user_id' => $this->talent->id,
-            'status' => 'rejected'
+            'status' => 'rejected_by_talent'
         ]);
     }
 }

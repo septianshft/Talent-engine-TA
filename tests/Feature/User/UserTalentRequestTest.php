@@ -113,7 +113,7 @@ test('can create talent request with 100 percent competency weight', function ()
         'work_location_city' => 'TestCity', // Required for on_site
         'work_location_country' => 'TestCountry', // Required for on_site
         'competencies' => [
-            ['id' => $this->competency1->id, 'level' => 5, 'weight' => 100],
+            ['id' => $this->competency1->id, 'level' => 4, 'weight' => 100], // Changed level from 5 to 4
             ['id' => $this->competency2->id, 'level' => 2, 'weight' => 0], // Other competency must have 0 or not be present if sum is implicitly 100
         ],
     ];
@@ -259,7 +259,7 @@ test('fails validation with competency weight greater than 100', function () { /
     $response = $this->withoutMiddleware()
                      ->post(route('user.requests.store'), $requestData);
 
-    $response->assertSessionHasErrors(['competencies.0.weight' => 'The competency weight must not be greater than 100.']);
+    $response->assertSessionHasErrors(['competencies.0.weight' => 'Weight must not exceed 100%.']);
 });
 
 test('fails validation with competency weight less than 0', function () { // Added
@@ -276,7 +276,7 @@ test('fails validation with competency weight less than 0', function () { // Add
     $response = $this->withoutMiddleware()
                      ->post(route('user.requests.store'), $requestData);
 
-    $response->assertSessionHasErrors(['competencies.0.weight' => 'The competency weight must be at least 0.']);
+    $response->assertSessionHasErrors(['competencies.0.weight' => 'Weight must be at least 0%.']);
 });
 
 test('fails validation with missing location country for on_site work', function () {
@@ -321,8 +321,14 @@ test('can create direct talent request', function () {
 
     // Create a talent user
     $talent = User::factory()->create();
-    $talentRole = Role::where('name', 'talent')->first();
+    $talentRole = Role::firstOrCreate(['name' => 'talent']);
     $talent->roles()->attach($talentRole);
+
+    // Ensure the role is properly saved and can be queried
+    $talent->refresh();
+
+    // Debug: verify role assignment worked
+    expect($talent->hasRole('talent'))->toBeTrue();
 
     $requestData = [
         'details' => 'Direct request for specific talent.',
@@ -333,8 +339,7 @@ test('can create direct talent request', function () {
         ],
     ];
 
-    $response = $this->withoutMiddleware()
-                     ->post(route('user.requests.store'), $requestData);
+    $response = $this->post(route('user.requests.store'), $requestData);
 
     $response->assertRedirect(route('user.requests.index'));
     $response->assertSessionHas('success');

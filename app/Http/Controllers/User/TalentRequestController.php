@@ -10,6 +10,7 @@ use App\Models\Competency;
 use Illuminate\Http\Request;
 use App\Http\Requests\TalentRequestRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TalentRequestController extends Controller
 {
@@ -69,67 +70,88 @@ class TalentRequestController extends Controller
 
     /**
      * Store a newly created talent request in storage.
+     * Phase 1 Fix: Added database transaction safety for data integrity
      */
     public function store(TalentRequestRequest $request)
     {
-
         // Get validated data from the enhanced request
         $validated = $request->validated();
 
-        // Check if this is a direct talent request
-        $isDirect = $request->has('talent_id');
+        // Check if this is a direct talent request based on validated data
+        $isDirect = !empty($validated['talent_id']);
 
-        // Determine status and talent assignment based on request type
-        if ($isDirect) {
-            // Verify the selected user is actually a talent
-            $talent = User::find($validated['talent_id']);
-            if (!$talent || !$talent->hasRole('talent')) {
-                return back()->withErrors(['talent_id' => 'Selected user is not a valid talent.'])->withInput();
-            }
+        try {
+            return DB::transaction(function () use ($validated, $isDirect) {
+                // Determine status and talent assignment based on request type
+                if ($isDirect) {
+                    // Verify the selected user is actually a talent
+                    $talent = User::find($validated['talent_id']);
 
-            $status = 'pending_talent';
-            $successMessage = 'Direct talent request sent successfully. The talent will be notified to respond.';
-        } else {
-            $status = 'pending_admin';
-            $successMessage = 'Talent request submitted successfully. It will be reviewed by an administrator.';
-        }
+                    if (!$talent || !$talent->hasRole('talent')) {
+                        throw new \InvalidArgumentException('Selected user is not a valid talent.');
+                    }
 
-        // Create the talent request
-        $talentRequest = TalentRequest::create([
-            'user_id' => Auth::id(),
-            'details' => $validated['details'],
-            'status' => $status,
-            'work_location_type' => $validated['work_location_type'],
-            'work_location_country' => $validated['work_location_type'] === 'remote' ? null : $validated['work_location_country'],
-            'work_location_city' => $validated['work_location_type'] === 'remote' ? null : $validated['work_location_city'],
-        ]);
+                    $status = 'pending_talent';
+                    $successMessage = 'Direct talent request sent successfully. The talent will be notified to respond.';
+                } else {
+                    $status = 'pending_admin';
+                    $successMessage = 'Talent request submitted successfully. It will be reviewed by an administrator.';
+                }
 
-        // If this is a direct request, assign the talent immediately
-        if ($isDirect) {
-            $talentRequest->assignedTalents()->attach($validated['talent_id'], [
-                'status' => 'pending_assignment_response'
+                // Create the talent request
+                $talentRequest = TalentRequest::create([
+                    'user_id' => Auth::id(),
+                    'details' => $validated['details'],
+                    'status' => $status,
+                    'work_location_type' => $validated['work_location_type'],
+                    'work_location_country' => $validated['work_location_type'] === 'remote' ? null : $validated['work_location_country'],
+                    'work_location_city' => $validated['work_location_type'] === 'remote' ? null : $validated['work_location_city'],
+                ]);
+
+                // If this is a direct request, assign the talent immediately
+                if ($isDirect) {
+                    $talentRequest->assignedTalents()->attach($validated['talent_id'], [
+                        'status' => 'pending_assignment_response',
+                        'assignment_type' => 'direct_offer' // Add required assignment_type field
+                    ]);
+                }
+
+                // Prepare data for attaching competencies with proficiency levels and weights
+                $competenciesToAttach = [];
+                foreach ($validated['competencies'] as $compData) {
+                    $competenciesToAttach[$compData['id']] = [
+                        'required_proficiency_level' => $compData['level'],
+                        'weight' => $compData['weight'] // Add weight here
+                    ];
+                }
+
+                // Attach the required competencies with their proficiency levels and weights
+                // The 'min:1' validation for 'competencies' array ensures $competenciesToAttach will not be empty if validation passes.
+                if (!empty($competenciesToAttach)) {
+                    $talentRequest->competencies()->attach($competenciesToAttach);
+                }
+
+                return redirect()->route('user.requests.index')->with('success', $successMessage);
+            });
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['talent_id' => $e->getMessage()])->withInput();
+        } catch (\Exception $e) {
+            // Log the error for debugging purposes
+            Log::error('[TalentRequest] Error creating request: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'is_direct' => $isDirect,
+                'details_length' => strlen($validated['details'] ?? ''),
+                'competencies_count' => count($validated['competencies'] ?? [])
             ]);
+
+            return back()->with('error', 'An unexpected error occurred while creating your request. Please try again.')->withInput();
         }
-
-        // Prepare data for attaching competencies with proficiency levels and weights
-        $competenciesToAttach = [];
-        foreach ($validated['competencies'] as $compData) {
-            $competenciesToAttach[$compData['id']] = [
-                'required_proficiency_level' => $compData['level'],
-                'weight' => $compData['weight'] // Add weight here
-            ];
-        }
-
-        // Attach the required competencies with their proficiency levels and weights
-        // The 'min:1' validation for 'competencies' array ensures $competenciesToAttach will not be empty if validation passes.
-        $talentRequest->competencies()->attach($competenciesToAttach);
-
-        return redirect()->route('user.requests.index')->with('success', $successMessage);
     }
 
     /**
      * Store a newly created direct talent request in storage.
      * This is a simplified version for direct requests to specific talents.
+     * Phase 1 Fix: Added database transaction safety for data integrity
      */
     public function storeDirect(Request $request, User $talent)
     {
@@ -161,39 +183,53 @@ class TalentRequestController extends Controller
             'competencies.*.weight.in' => 'Invalid competency weight selected.',
         ]);
 
-        // Create the talent request with status 'pending_talent' (overall request status)
-        $talentRequest = TalentRequest::create([
-            'user_id' => Auth::id(), // The user creating the request
-            'details' => $validated['details'],
-            'status' => 'pending_talent', // Status of the TalentRequest itself
-            'work_location_type' => $validated['work_location_type'],
-            'work_location_country' => $validated['work_location_type'] === 'remote' ? null : $validated['work_location_country'],
-            'work_location_city' => $validated['work_location_type'] === 'remote' ? null : $validated['work_location_city'],
-        ]);
+        try {
+            return DB::transaction(function () use ($validated, $talent) {
+                // Create the talent request with status 'pending_talent' (overall request status)
+                $talentRequest = TalentRequest::create([
+                    'user_id' => Auth::id(), // The user creating the request
+                    'details' => $validated['details'],
+                    'status' => 'pending_talent', // Status of the TalentRequest itself
+                    'work_location_type' => $validated['work_location_type'],
+                    'work_location_country' => $validated['work_location_type'] === 'remote' ? null : $validated['work_location_country'],
+                    'work_location_city' => $validated['work_location_type'] === 'remote' ? null : $validated['work_location_city'],
+                ]);
 
-        // Assign the talent immediately with direct offer status
-        $talentRequest->assignedTalents()->attach($talent->id, [
-            'status' => 'direct_offer_pending', // Status of this specific assignment
-            'assignment_type' => 'direct_offer',
-            'assigned_by' => Auth::id(), // The user who initiated this direct offer
-        ]);
+                // Assign the talent immediately with direct offer status
+                $talentRequest->assignedTalents()->attach($talent->id, [
+                    'status' => 'direct_offer_pending', // Status of this specific assignment
+                    'assignment_type' => 'direct_offer',
+                    'assigned_by' => Auth::id(), // The user who initiated this direct offer
+                ]);
 
-        // Attach competencies from the request
-        $competenciesToAttach = [];
-        if (!empty($validated['competencies'])) {
-            foreach ($validated['competencies'] as $compData) {
-                $competenciesToAttach[$compData['id']] = [
-                    'required_proficiency_level' => $compData['level'],
-                    'weight' => $compData['weight']
-                ];
-            }
+                // Attach competencies from the request
+                $competenciesToAttach = [];
+                if (!empty($validated['competencies'])) {
+                    foreach ($validated['competencies'] as $compData) {
+                        $competenciesToAttach[$compData['id']] = [
+                            'required_proficiency_level' => $compData['level'],
+                            'weight' => $compData['weight']
+                        ];
+                    }
+                }
+
+                if (!empty($competenciesToAttach)) {
+                    $talentRequest->competencies()->attach($competenciesToAttach);
+                }
+
+                return redirect()->route('user.requests.index')->with('success', 'Direct talent request sent successfully. The talent will be notified to respond.');
+            });
+        } catch (\Exception $e) {
+            // Log the error for debugging purposes
+            Log::error('[TalentRequest] Error creating direct request: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'talent_id' => $talent->id,
+                'details_length' => strlen($validated['details'] ?? ''),
+                'competencies_count' => count($validated['competencies'] ?? [])
+            ]);
+
+            return back()->with('error', 'An unexpected error occurred while creating your direct request. Please try again.')->withInput();
         }
-
-        if (!empty($competenciesToAttach)) {
-            $talentRequest->competencies()->attach($competenciesToAttach);
-        }
-
-        return redirect()->route('user.requests.index')->with('success', 'Direct talent request sent successfully. The talent will be notified to respond.');
     }
 
     /**

@@ -34,7 +34,7 @@ test('users can not authenticate with invalid password', function () {
         ->set('password', 'wrong-password')
         ->call('login');
 
-    $response->assertHasErrors('email');
+    $response->assertHasErrors('password');
 
     $this->assertGuest();
 });

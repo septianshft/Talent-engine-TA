@@ -37,75 +37,65 @@ class EnhancedDecisionSupportServiceTest extends TestCase
         $talentRole = Role::where('name', 'talent')->first();
         $talent->roles()->attach($talentRole);
         return $talent;
-    }
-
-    /** @test */
-    public function it_allows_single_competency_weight_up_to_100_percent()
+    }    /** @test */
+    public function it_prevents_extreme_weight_imbalance_for_academic_compliance()
     {
         $php = Competency::factory()->create(['name' => 'PHP']);
         $laravel = Competency::factory()->create(['name' => 'Laravel']);
 
         $talentRequest = TalentRequest::factory()->create();
         $talentRequest->competencies()->attach([
-            $php->id => ['required_proficiency_level' => 4, 'weight' => 100],
-            $laravel->id => ['required_proficiency_level' => 3, 'weight' => 0]
+            $php->id => ['required_proficiency_level' => 4, 'weight' => 95],  // Extreme dominance with multiple competencies
+            $laravel->id => ['required_proficiency_level' => 3, 'weight' => 5]
         ]);
 
         $talent = $this->createTalent();
         $talent->competencies()->attach($php->id, ['proficiency_level' => 5]);
         $talent->competencies()->attach($laravel->id, ['proficiency_level' => 5]);
 
+        // Academic compliance: Should throw ValidationException for extreme imbalance (>90% with multiple competencies)
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Extreme weight imbalance detected (95.0% dominance)');
 
-        // No ValidationException should be thrown.
         $results = $this->service->findAndRankTalents($talentRequest);
-        $this->assertNotNull($results); // Check that the service runs without exception
-        // Potentially add more assertions about the results if specific behavior is expected
     }
 
     /** @test */
-    public function it_allows_zero_weight_for_all_competencies()
+    public function it_allows_location_only_evaluation_with_zero_competency_weights()
     {
         $php = Competency::factory()->create(['name' => 'PHP']);
         $laravel = Competency::factory()->create(['name' => 'Laravel']);
 
-        $talentRequest = TalentRequest::factory()->create();
+        $talentRequest = TalentRequest::factory()->create([
+            'work_location_type' => 'remote'
+        ]);
         $talentRequest->competencies()->attach([
             $php->id => ['required_proficiency_level' => 4, 'weight' => 0],
             $laravel->id => ['required_proficiency_level' => 3, 'weight' => 0]
         ]);
 
-        $talent = $this->createTalent(['domicile_city' => 'TestCity']); // Ensure talent has a location for location score
+        $talent = $this->createTalent(['domicile_city' => 'TestCity', 'can_work_remote' => true]);
         $talent->competencies()->attach($php->id, ['proficiency_level' => 5]);
         $talent->competencies()->attach($laravel->id, ['proficiency_level' => 5]);
 
-        // No ValidationException should be thrown.
+        // Should now allow location-only evaluation (valid academic scenario)
         $results = $this->service->findAndRankTalents($talentRequest);
-        $this->assertNotNull($results);
 
-        if ($results->isNotEmpty()) {
-            $firstResult = $results->first();
-            $this->assertArrayHasKey('competency_scores', $firstResult);
-            $this->assertArrayHasKey('location_score', $firstResult);
-            $this->assertArrayHasKey('saw_score', $firstResult);
+        $this->assertNotEmpty($results);
+        $firstResult = $results->first();
 
-            // Check that competency scores are zero or handled as expected
-            foreach ($firstResult['competency_scores'] as $competencyName => $score) {
-                $this->assertEquals(0, $score, "Normalized score for {$competencyName} should be 0 when all weights are 0");
-            }
-            // The overall SAW score should be influenced only by location score if all competency weights are 0
-            // Assuming location weight is a constant in EnhancedDecisionSupportService
-            $expectedSawScore = $firstResult['location_score'] * EnhancedDecisionSupportService::LOCATION_WEIGHT_PERCENTAGE;
-            $this->assertEquals($expectedSawScore, $firstResult['saw_score'], 0.001, "SAW score should primarily reflect location score when competency weights are zero.");
-        }
+        // Score should be based on location compatibility only (15% weight)
+        // Remote work compatibility gives 0.5 score × 0.15 weight = 0.075
+        $this->assertEquals(0.08, round($firstResult['saw_score'], 2), 'Score should be location-based only');
     }
 
     /** @test */
-    public function it_normalize_weights_handles_all_zero_weights_gracefully()
+    public function it_normalize_weights_handles_academic_compliant_distribution()
     {
         $php = Competency::factory()->create(['name' => 'PHP']);
         $talentRequest = TalentRequest::factory()->create();
         $talentRequest->competencies()->attach([
-            $php->id => ['required_proficiency_level' => 3, 'weight' => 0],
+            $php->id => ['required_proficiency_level' => 3, 'weight' => 50], // Meaningful weight for academic compliance
         ]);
 
         $talent = $this->createTalent();
@@ -118,8 +108,8 @@ class EnhancedDecisionSupportServiceTest extends TestCase
             $firstResult = $results->first();
             $this->assertArrayHasKey('details', $firstResult);
             $this->assertArrayHasKey('normalized_weights', $firstResult['details']);
-            // Expect normalized weight to be 0 if original weight was 0 and total weight was 0
-            $this->assertEquals(0, $firstResult['details']['normalized_weights']['PHP']);
+            // With single competency weight of 50, normalized weight should be 1.0 (100% of available weight)
+            $this->assertEquals(1.0, $firstResult['details']['normalized_weights']['PHP'], 0.001);
         }
     }
 
@@ -128,26 +118,26 @@ class EnhancedDecisionSupportServiceTest extends TestCase
     {
         $c1 = Competency::factory()->create(['name' => 'Comp1']); // High weight
         $c2 = Competency::factory()->create(['name' => 'Comp2']); // Medium weight
-        $c3 = Competency::factory()->create(['name' => 'Comp3']); // Zero weight
+        $c3 = Competency::factory()->create(['name' => 'Comp3']); // Low weight
 
         $talentRequest = TalentRequest::factory()->create(['work_location_city' => 'Anytown']);
         $talentRequest->competencies()->attach([
-            $c1->id => ['required_proficiency_level' => 3, 'weight' => 70],
+            $c1->id => ['required_proficiency_level' => 3, 'weight' => 60], // Academic compliant - no dominance
             $c2->id => ['required_proficiency_level' => 3, 'weight' => 30],
-            $c3->id => ['required_proficiency_level' => 3, 'weight' => 0],
+            $c3->id => ['required_proficiency_level' => 3, 'weight' => 10], // Low but positive weight
         ]);
 
-        // Talent Strong in C1, moderate in C2, weak in C3 (C3 doesn't matter due to 0 weight)
+        // Talent Strong in C1, moderate in C2, good in C3 - meets all requirements
         $talentA = $this->createTalent(['name' => 'Talent A', 'domicile_city' => 'Anytown']);
-        $talentA->competencies()->attach($c1->id, ['proficiency_level' => 5]);
-        $talentA->competencies()->attach($c2->id, ['proficiency_level' => 3]);
-        $talentA->competencies()->attach($c3->id, ['proficiency_level' => 1]);
+        $talentA->competencies()->attach($c1->id, ['proficiency_level' => 5]); // Exceeds requirement
+        $talentA->competencies()->attach($c2->id, ['proficiency_level' => 3]); // Meets requirement
+        $talentA->competencies()->attach($c3->id, ['proficiency_level' => 4]); // Exceeds requirement
 
-        // Talent Moderate in C1, strong in C2, strong in C3
+        // Talent Moderate in C1, strong in C2, strong in C3 - also meets all requirements
         $talentB = $this->createTalent(['name' => 'Talent B', 'domicile_city' => 'Anytown']);
-        $talentB->competencies()->attach($c1->id, ['proficiency_level' => 3]);
-        $talentB->competencies()->attach($c2->id, ['proficiency_level' => 5]);
-        $talentB->competencies()->attach($c3->id, ['proficiency_level' => 5]);
+        $talentB->competencies()->attach($c1->id, ['proficiency_level' => 3]); // Meets requirement
+        $talentB->competencies()->attach($c2->id, ['proficiency_level' => 5]); // Exceeds requirement
+        $talentB->competencies()->attach($c3->id, ['proficiency_level' => 5]); // Exceeds requirement
 
         $results = $this->service->findAndRankTalents($talentRequest);
 
@@ -526,5 +516,33 @@ class EnhancedDecisionSupportServiceTest extends TestCase
         // Location score should be normalized (0-1)
         $this->assertGreaterThanOrEqual(0, $result['location_score']);
         $this->assertLessThanOrEqual(1, $result['location_score']);
+    }
+
+    /** @test */
+    public function it_allows_single_competency_at_100_percent_for_specialized_roles()
+    {
+        $php = Competency::factory()->create(['name' => 'PHP']);
+        $laravel = Competency::factory()->create(['name' => 'Laravel']);
+
+        $talentRequest = TalentRequest::factory()->create([
+            'work_location_type' => 'remote'
+        ]);
+        $talentRequest->competencies()->attach([
+            $php->id => ['required_proficiency_level' => 4, 'weight' => 100],  // 100% weight is valid for specialized roles
+            $laravel->id => ['required_proficiency_level' => 3, 'weight' => 0]   // Other competencies can be 0
+        ]);
+
+        $talent = $this->createTalent(['can_work_remote' => true]);
+        $talent->competencies()->attach($php->id, ['proficiency_level' => 5]);
+        $talent->competencies()->attach($laravel->id, ['proficiency_level' => 5]);
+
+        // Should work: 100% single competency is valid for specialized roles
+        $results = $this->service->findAndRankTalents($talentRequest);
+
+        $this->assertNotEmpty($results);
+        $firstResult = $results->first();
+
+        // Score should be primarily competency-based (85% * normalized performance) + location (15%)
+        $this->assertGreaterThan(0.8, $firstResult['saw_score'], 'Score should be high for excellent match in specialized role');
     }
 }

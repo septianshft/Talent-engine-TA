@@ -225,37 +225,15 @@ class AdminDssProcessingTest extends TestCase
             'status' => 'pending_admin',
         ]);
 
-        // These weights are for the *competencies themselves* before being normalized into the 85% category.
-        // The validation for individual competency weights being > 100% (e.g. a single competency having weight 110) is different
-        // from the sum of all competency weights for a request exceeding 100% when they are *meant to sum to 100%*.
-        // The current `validateWeightDistribution` checks if a *single* weight is too dominant if total > 0.
-        // It does not explicitly check if the sum of weights (e.g., 60 + 50 = 110) is > 100 if that's the intended validation.
-        // The `EnhancedDecisionSupportService`'s `validateWeightDistribution` was modified to allow a single competency to take 100%.
-        // It seems the test intent is to check if the *sum of user-provided weights for multiple competencies* exceeding 100% causes an error.
-        // The current `validateWeightDistribution` does *not* throw an error if sum > 100 but individual weights are fine.
-        // It normalizes them proportionally. So, 60 and 50 would become 60/110 and 50/110.
-        // Let's adjust the test to reflect what `validateWeightDistribution` *actually* checks for an error: a single weight being > 100% of the total non-zero weight.
-        // To trigger the intended error (a single weight being too large), we need to make one weight itself invalid (e.g. > 100, if the system assumes weights are percentages summing to 100).
-        // However, the `extractRequiredCompetencies` method already validates individual weights: `if ($weight < 0 || $weight > 100)`. So `weight > 100` would be caught there.
-
-        // The original error message this test expected was: "Details: Total competency weight cannot exceed 100%"
-        // This implies a validation rule that the *sum* of weights provided by the user (60 + 50) should not exceed 100.
-        // This validation is NOT currently in `validateWeightDistribution` or `extractRequiredCompetencies` in that exact form.
-        // `extractRequiredCompetencies` checks individual weights (0-100).
-        // `validateWeightDistribution` checks for dominance of a single weight if total > 0, and total weight sum for variance (which was removed).
-
-        // For this test to pass as originally intended (sum of weights > 100% is an error), `validateWeightDistribution` needs to be changed.
-        // Given the current code, this test *should not* produce a `$dssErrorMessage` for weights 60 and 50.
-        // Let's assume the test *intended* to check the scenario where the service *should* return an error for sum > 100%.
-        // We will modify `validateWeightDistribution` to enforce this.
-
+        // Test academic compliance: weights should not exceed 100% total
+        // This ensures proper weight distribution for academic rigor
         $talentRequest->competencies()->attach($this->competencyA->id, [
             'required_proficiency_level' => 1,
-            'weight' => 70 // This will be 70/120 of the 85% allocated to competencies
+            'weight' => 70 // 70% weight
         ]);
         $talentRequest->competencies()->attach($this->competencyB->id, [
             'required_proficiency_level' => 1,
-            'weight' => 50 // This will be 50/120 of the 85% allocated to competencies
+            'weight' => 50 // 50% weight, total = 120% which exceeds limit
         ]);
 
         $response = $this->actingAs($this->adminUser)->get(route('admin.talent-requests.show', $talentRequest));
@@ -269,20 +247,16 @@ class AdminDssProcessingTest extends TestCase
         // To make this test pass by asserting an error, `EnhancedDecisionSupportService::validateWeightDistribution` needs to be modified
         // to throw an exception if `array_sum($weights)` is greater than 100 (assuming weights are percentages).
 
-        // For now, let's assert that NO error message is present, as per current service logic.
-        $response->assertViewHas('dssErrorMessage'); // The key exists
+        // With academic compliance enforced, weights totaling >100% should produce an error
+        $response->assertViewHas('dssErrorMessage');
         $dssErrorMessage = $response->viewData('dssErrorMessage');
-        $this->assertNull($dssErrorMessage); // But it should be null if weights 70, 50 are accepted & normalized
+        $this->assertNotNull($dssErrorMessage, 'Should have error message for weights exceeding 100%');
+        $this->assertStringContainsString('Total competency weights (120.0%) cannot exceed 100%', $dssErrorMessage);
 
+        // Should not have ranked talents when there's a validation error
         $response->assertViewHas('rankedTalents');
         $rankedTalents = $response->viewData('rankedTalents');
         $this->assertInstanceOf(\Illuminate\Support\Collection::class, $rankedTalents);
-        // Talents should be found if no error, assuming some talents meet the basic criteria.
-        // Since we haven't created talents in this specific test, it will be empty, which is fine if no error.
-        $this->assertTrue($rankedTalents->isEmpty());
-
-        $response->assertViewHas('methodologyExplanation');
-        $methodologyExplanation = $response->viewData('methodologyExplanation');
-        $this->assertNotNull($methodologyExplanation); // Methodology should be present if no error
+        $this->assertCount(0, $rankedTalents, 'Should have no ranked talents when validation fails');
     }
 }

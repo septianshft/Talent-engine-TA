@@ -62,12 +62,37 @@ class TalentRequestRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    public function prepareForValidation()
+    {
+        $this->merge([
+            'details' => strip_tags($this->details),
+            'work_location_country' => $this->work_location_country ? trim($this->work_location_country) : null,
+            'work_location_city' => $this->work_location_city ? trim($this->work_location_city) : null,
+        ]);
+    }
+
+    /**
+     * Handle a passed validation attempt.
+     */
+    protected function passedValidation()
+    {
+        // Additional sanitization after validation passes
+        $this->replace([
+            'details' => htmlspecialchars($this->details, ENT_QUOTES, 'UTF-8'),
+        ]);
+    }
+
+    /**
      * Configure the validator instance.
      */
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
             $this->validateCompetencies($validator);
+            $this->validateWeightDistribution($validator);
+            $this->validateLocationRequirements($validator);
         });
     }
 
@@ -89,24 +114,87 @@ class TalentRequestRequest extends FormRequest
         }
 
         // Validate that all competencies have required fields
-        // Note: 'weight' can now be 0, so !empty($competency['weight']) might be problematic if 0 is submitted and treated as empty.
-        // The 'required' and 'integer' rules for competencies.*.weight should handle presence and type.
-        // We need to ensure that '0' is not considered 'empty' in a way that bypasses other checks or causes issues here.
-        // PHP's empty() treats '0' (string) and 0 (int) as empty.
-        // It's better to check for null or if the key is not set if 0 is a valid value.
-
         foreach ($competencies as $index => $competency) {
             if (!isset($competency['id']) || !isset($competency['level']) || !isset($competency['weight'])) {
                 $validator->errors()->add(
-                    "competencies.{$index}.fields", // More specific error key
+                    "competencies.{$index}.fields",
                     'Each competency must have an ID, level, and weight specified.'
                 );
             } elseif ($competency['weight'] === '' || $competency['weight'] === null) {
-                 // This case handles if weight is submitted as an empty string, which wouldn't be caught by min:0 if not numeric
-                 $validator->errors()->add(
+                $validator->errors()->add(
                     "competencies.{$index}.weight",
                     'Weight cannot be empty, please provide a value between 0 and 100.'
                 );
+            }
+        }
+    }
+
+    /**
+     * Validate weight distribution for thesis compliance
+     * Updated to align with Enhanced DSS academic compliance logic
+     */
+    protected function validateWeightDistribution($validator)
+    {
+        $competencies = $this->input('competencies', []);
+
+        if (empty($competencies)) {
+            return;
+        }
+
+        $weights = array_column($competencies, 'weight');
+        $totalWeight = array_sum($weights);
+
+        // Academic compliance: Total weights should not exceed 100%
+        if ($totalWeight > 100) {
+            $validator->errors()->add('competencies',
+                sprintf("Total weight (%.1f%%) exceeds 100%%. Please adjust weight distribution for academic compliance.", $totalWeight)
+            );
+            return; // Stop further validation if total exceeds 100%
+        }
+
+        // Academic scenario: Allow zero-weight competencies for location-only evaluation
+        if ($totalWeight == 0) {
+            // This is valid for location-only evaluation scenarios
+            return;
+        }
+
+        // Academic compliance: Prevent extreme imbalance only when multiple non-zero competencies exist
+        $nonZeroWeights = array_filter($weights, function($weight) { return $weight > 0; });
+        if (count($nonZeroWeights) > 1 && $totalWeight > 0) {
+            $maxWeight = max($weights);
+            $dominanceRatio = $maxWeight / $totalWeight;
+
+            // Allow up to 90% dominance, prevent only extreme cases (>90%)
+            if ($dominanceRatio > 0.9) {
+                $validator->errors()->add('competencies',
+                    sprintf('Extreme weight imbalance detected (%.1f%% dominance). For academic rigor, consider more balanced distribution when using multiple competencies.',
+                    $dominanceRatio * 100)
+                );
+            }
+        }
+
+        // Single competency at 100% is academically valid for specialized roles
+        // No additional validation needed - this scenario is explicitly allowed
+    }
+
+    /**
+     * Validate location requirements
+     */
+    protected function validateLocationRequirements($validator)
+    {
+        $workLocationType = $this->input('work_location_type');
+        $country = $this->input('work_location_country');
+        $city = $this->input('work_location_city');
+
+        if (in_array($workLocationType, ['on_site', 'hybrid'])) {
+            if (empty($country)) {
+                $validator->errors()->add('work_location_country',
+                    'Country is required for on-site or hybrid work arrangements.');
+            }
+
+            if (empty($city)) {
+                $validator->errors()->add('work_location_city',
+                    'City is required for on-site or hybrid work arrangements.');
             }
         }
     }
