@@ -32,6 +32,7 @@ class TalentRequest extends Model
         'work_location_type',
         'work_location_country',
         'work_location_city',
+        'veto_threshold', // Add veto threshold field
     ];
 
     protected $casts = [

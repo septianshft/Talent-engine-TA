@@ -1,0 +1,202 @@
+@startuml Enhanced_DSS_State_Diagram
+!theme plain
+
+title Enhanced Decision Support System - Talent Request Lifecycle State Diagram
+note top : "Complete state transitions with Enhanced DSS integration and critical competency handling"
+
+[*] --> Draft : User starts creating request
+
+state Draft {
+  Draft : User configuring request
+  Draft : - Adding competencies
+  Draft : - Setting weights (0-100%)
+  Draft : - Marking critical competencies
+  Draft : - Configuring veto threshold (60-100%)
+  Draft : - Specifying location preferences
+}
+
+Draft --> ValidationInProgress : User submits request
+note on link : store() called with form data
+
+state ValidationInProgress {
+  ValidationInProgress : TalentRequestRequest validation
+  ValidationInProgress : - Weight distribution check (≤100% total)
+  ValidationInProgress : - Critical competency ratio (≤70%)
+  ValidationInProgress : - Veto threshold range (60-100%)
+  ValidationInProgress : - Required field validation
+  ValidationInProgress : - Business rule compliance
+}
+
+ValidationInProgress --> ValidationFailed : Validation errors found
+ValidationInProgress --> PendingAdmin : Validation successful
+
+ValidationFailed --> Draft : User corrects errors
+note on link : Redirect back with error messages
+
+state PendingAdmin {
+  PendingAdmin : Awaiting admin review
+  PendingAdmin : - Request visible in admin dashboard
+  PendingAdmin : - Enhanced DSS ready for processing
+  PendingAdmin : - Basic SAW available for comparison
+}
+
+PendingAdmin --> DSSProcessing : Admin views request details
+note on link : show() triggers DSS algorithms
+
+state DSSProcessing {
+  DSSProcessing : Enhanced DSS Algorithm Execution
+  --
+  DSSProcessing : 1. Extract & validate competencies
+  DSSProcessing : 2. Normalize weights (competency: 85%, location: 15%)
+  DSSProcessing : 3. Filter qualified talents (mandatory requirements)
+  DSSProcessing : 4. Apply veto thresholds (critical competencies)
+  DSSProcessing : 5. Normalize performance values (min-max)
+  DSSProcessing : 6. Calculate SAW scores with bonuses
+  DSSProcessing : 7. Generate confidence & sensitivity analysis
+  --
+  DSSProcessing : Parallel: Basic SAW for comparison
+}
+
+DSSProcessing --> NoQualifiedTalents : No talents meet criteria
+DSSProcessing --> ResultsAvailable : Qualified talents found
+
+state NoQualifiedTalents {
+  NoQualifiedTalents : No matching talents
+  NoQualifiedTalents : - All talents eliminated by veto thresholds
+  NoQualifiedTalents : - Insufficient competency levels
+  NoQualifiedTalents : - Location compatibility issues
+}
+
+NoQualifiedTalents --> RejectedByAdmin : Admin rejects due to unrealistic requirements
+NoQualifiedTalents --> PendingAdmin : Admin modifies criteria and retries
+
+state ResultsAvailable {
+  ResultsAvailable : DSS results ready for admin review
+  ResultsAvailable : - Enhanced DSS rankings (up to 10 talents)
+  ResultsAvailable : - Basic SAW comparison (up to 5 talents)
+  ResultsAvailable : - Score breakdowns and methodology
+  ResultsAvailable : - Confidence indicators
+  ResultsAvailable : - Sensitivity analysis for top candidates
+}
+
+ResultsAvailable --> TalentSelection : Admin reviews results
+
+state TalentSelection {
+  TalentSelection : Admin decision making
+  TalentSelection : - Review Enhanced DSS recommendations
+  TalentSelection : - Compare with Basic SAW results
+  TalentSelection : - Analyze score contributions
+  TalentSelection : - Check confidence levels
+  TalentSelection : - Consider business factors
+}
+
+TalentSelection --> RejectedByAdmin : Admin decides to reject request
+TalentSelection --> PendingTalent : Admin selects and assigns talents
+
+RejectedByAdmin --> [*] : Request lifecycle ends
+note on link : reject() method called
+
+state PendingTalent {
+  PendingTalent : Awaiting talent responses
+  PendingTalent : - Assigned talents notified
+  PendingTalent : - Individual assignment statuses tracked
+  PendingTalent : - Parallel responses possible
+
+  state "Individual Assignment States" as IAS {
+    state Notified
+    state Reviewing
+    state Accepted
+    state Rejected
+
+    Notified --> Reviewing : Talent views assignment
+    Reviewing --> Accepted : Talent accepts
+    Reviewing --> Rejected : Talent declines
+  }
+}
+
+PendingTalent --> Approved : At least one talent accepts
+PendingTalent --> RejectedByTalent : All assigned talents reject
+
+state Approved {
+  Approved : Active talent assignment
+  Approved : - Project can commence
+  Approved : - Talent(s) confirmed for project
+  Approved : - Assignment tracking active
+}
+
+state RejectedByTalent {
+  RejectedByTalent : All talents declined
+  RejectedByTalent : - No available talent assignments
+  RejectedByTalent : - Admin can reassign or close request
+}
+
+RejectedByTalent --> TalentSelection : Admin selects different talents
+RejectedByTalent --> [*] : Admin closes request permanently
+
+Approved --> Completed : Project finished successfully
+Approved --> Cancelled : Project cancelled or terminated
+
+state Completed {
+  Completed : Project successfully completed
+  Completed : - Final project delivery
+  Completed : - Performance evaluation
+  Completed : - Historical record maintained
+}
+
+state Cancelled {
+  Cancelled : Project cancelled or terminated
+  Cancelled : - Reasons documented
+  Cancelled : - Talent assignments released
+  Cancelled : - Historical record maintained
+}
+
+Completed --> [*] : Request lifecycle ends
+Cancelled --> [*] : Request lifecycle ends
+
+' Additional state annotations for Enhanced DSS features
+note right of DSSProcessing
+  **Enhanced DSS Features:**
+
+  - Critical competency veto thresholds
+  - Progressive bonus system (up to 20%)
+  - Location intelligence scoring
+  - Mathematical SAW compliance
+  - Confidence scoring (multi-factor)
+  - Sensitivity analysis (top candidates)
+  - Academic weight validation
+  - Edge case handling (zero-range normalization)
+end note
+
+note left of ValidationInProgress
+  **Enhanced Validation Rules:**
+
+  Business Rules:
+  - Maximum 70% critical competencies
+  - Veto threshold: 60-100%
+  - Weight distribution: ≤100% total
+  - Single competency: ≤100%
+  - Extreme dominance warning: >90%
+
+  Academic Compliance:
+  - SAW methodology standards
+  - Mathematical bounds checking
+  - Zero-weight scenario support
+end note
+
+note bottom of ResultsAvailable
+  **Dual Algorithm Output:**
+
+  Enhanced DSS (10 results):
+  - Veto threshold filtering
+  - Critical competency bonuses
+  - Advanced location scoring
+  - Confidence indicators
+
+  Basic SAW (5 results):
+  - Standard SAW implementation
+  - Simple competency scoring
+  - Basic location compatibility
+  - Comparison baseline
+end note
+
+@enduml

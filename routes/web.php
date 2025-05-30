@@ -24,6 +24,7 @@ Route::middleware(['auth', 'verified', 'role:user'])->prefix('requests')->name('
     Route::post('/store-direct/{talent}', [UserTalentRequestController::class, 'storeDirect'])->name('store-direct');
     Route::post('/', [UserTalentRequestController::class, 'store'])->name('store');
     Route::get('/{talentRequest}', [UserTalentRequestController::class, 'show'])->name('show'); // Added show route
+    Route::get('/{talentRequest}/enhanced-results', [UserTalentRequestController::class, 'enhancedResults'])->name('enhanced-results'); // Enhanced DSS results
     Route::delete('/{talentRequest}', [UserTalentRequestController::class, 'destroy'])->name('destroy'); // Assuming users can delete their requests before approval
 });
 

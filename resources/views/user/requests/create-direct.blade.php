@@ -21,9 +21,9 @@
         </div>
 
         {{-- Talent Info Card --}}
-        <div class="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4 mb-6 shadow-sm">
             <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center text-green-700 font-bold text-xl shadow-lg">
+                <div class="w-12 h-12 bg-green-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-green-700 dark:text-green-400 font-bold text-xl shadow-lg">
                     {{ $talent->initials() }}
                 </div>
                 <div>
@@ -36,8 +36,8 @@
                     @endif
                 </div>
             </div>
-            <div class="mt-3 p-3 bg-white/60 dark:bg-gray-800/40 rounded border-l-4 border-green-400">
-                <p class="text-sm text-green-800 dark:text-green-200 font-medium">
+            <div class="mt-3 p-3 bg-green-50 dark:bg-gray-700 rounded border-l-4 border-green-400 dark:border-green-500">
+                <p class="text-sm text-green-800 dark:text-green-300 font-medium">
                     ⚡ Direct Request: Your request will go directly to this talent for review, bypassing admin approval.
                 </p>
             </div>
@@ -54,11 +54,11 @@
                         <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
                             Available Skills
                         </label>
-                        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <div class="p-4 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg">
                             <p class="text-sm text-blue-800 dark:text-blue-200 font-medium mb-3">{{ $talent->name }} has the following skills:</p>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 @foreach($talent->competencies as $skill)
-                                    <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-blue-200 dark:border-blue-600">
+                                    <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-blue-200 dark:border-gray-600">
                                         <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $skill->name }}</span>
                                         <span class="px-2 py-1 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200 text-xs rounded-full font-medium">
                                             Level {{ $skill->pivot->proficiency_level }}
@@ -70,7 +70,7 @@
                                     <input type="hidden" name="competencies[{{ $loop->index }}][weight]" value="3">
                                 @endforeach
                             </div>
-                            <div class="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded">
+                            <div class="mt-3 p-3 bg-green-50 dark:bg-slate-950 border border-green-200 dark:border-green-600 rounded">
                                 <p class="text-xs text-green-800 dark:text-green-200">
                                     ✓ All of {{ $talent->name }}'s skills will be included in your request automatically.
                                 </p>

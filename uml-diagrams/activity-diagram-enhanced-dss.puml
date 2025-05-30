@@ -1,0 +1,195 @@
+@startuml Enhanced_DSS_Activity_Diagram
+!theme plain
+
+title Enhanced Decision Support System (DSS) - Critical Competency Workflow
+note top : "Enhanced SAW Algorithm with Veto Thresholds and Location Intelligence"
+
+start
+
+:User creates talent request with competencies;
+note right
+  User specifies:
+  - Required competencies
+  - Proficiency levels (1-5)
+  - Competency weights (0-100%)
+  - Critical competency flags
+  - Veto threshold (60-100%)
+end note
+
+:Enhanced DSS receives request;
+
+:Extract required competencies;
+note right
+  Parse competency requirements:
+  - ID, name, required level
+  - Weight, critical flag
+  - Veto threshold percentage
+end note
+
+:Validate weight distribution;
+note right
+  Academic compliance checks:
+  - Total weights ≤ 100%
+  - Single competency ≤ 100%
+  - Multiple competencies <90% dominance
+  - Zero weights allowed (location-only)
+end note
+
+if (Weights valid?) then (yes)
+else (no)
+  :Throw validation exception;
+  end
+endif
+
+:Normalize competency weights;
+note right
+  Weight normalization formula:
+  normalized_weight = (weight / total_weight) × 0.85
+  Location weight: 0.15 (automatic)
+end note
+
+:Find all talents with 'talent' role;
+
+:Apply mandatory filtering;
+note right
+  Filter talents who have ALL
+  required competencies at
+  minimum proficiency levels
+end note
+
+if (Qualified talents found?) then (yes)
+else (no)
+  :Return empty results;
+  end
+endif
+
+:Apply veto thresholds for critical competencies;
+note left
+  **Critical Competency Veto Logic:**
+
+  For each critical competency:
+  effective_threshold = required_level × (veto_percentage / 100)
+
+  Example:
+  Required PHP Level: 4
+  Veto threshold: 80%
+  Effective threshold: 4 × 0.8 = 3.2
+
+  Talent with PHP Level 3 → ELIMINATED
+  Talent with PHP Level 4 → QUALIFIED
+end note
+
+if (Talents pass veto thresholds?) then (yes)
+else (no)
+  :Log veto elimination details;
+  :Remove eliminated talents;
+endif
+
+if (Any talents remain?) then (yes)
+else (no)
+  :Return empty results with veto explanation;
+  end
+endif
+
+:Normalize performance values (Min-Max);
+note right
+  For each competency:
+  normalized_score = (talent_level - min_level) / (max_level - min_level)
+
+  Edge case handling:
+  If range = 0: score = (talent_level >= required) ? 1.0 : 0.0
+end note
+
+:Calculate Enhanced SAW scores;
+
+partition "Enhanced SAW Calculation" {
+  :Initialize competency score = 0;
+
+  repeat
+    :Get next competency;
+    :Calculate normalized performance;
+    :Apply competency weight;
+
+    if (Is critical competency?) then (yes)
+      :Calculate critical bonus;
+      note right
+        Progressive bonus for exceeding requirements:
+        excess_performance = (talent_level - required_level) / required_level
+        critical_bonus = 1.0 + (0.2 × excess_performance)
+        Maximum 20% bonus for critical competencies
+      end note
+      :Apply critical bonus multiplier;
+    else (no)
+    endif
+
+    :Add weighted contribution to competency score;
+
+  repeat while (More competencies?) is (yes)
+  -> no;
+
+  :Calculate location compatibility score;
+  note right
+    Location scoring components:
+    - Country match: 50% weight
+    - City proximity: 30% weight
+    - Timezone compatibility: 20% weight
+
+    Work type adjustments:
+    - Remote work: neutral 0.5
+    - Hybrid work: 0.7 factor
+    - On-site: full location scoring
+  end note
+
+  :Calculate final SAW score;
+  note right
+    Final formula:
+    Final_Score = (Competency_Score × 0.85) + (Location_Score × 0.15)
+
+    Mathematical validation:
+    - Ensure weights sum to 1.0
+    - Bound final score to [0,1]
+    - Log calculation details
+  end note
+
+  :Calculate confidence score;
+  note left
+    Multi-factor confidence assessment:
+    - Competency coverage percentage
+    - Skill consistency (variance analysis)
+    - Over-qualification bonus
+    - Portfolio completeness
+
+    Minimum confidence threshold: 60%
+  end note
+}
+
+if (Top candidate?) then (yes)
+  :Perform sensitivity analysis;
+  note right
+    For top candidates only:
+    - Weight sensitivity testing
+    - Ranking stability analysis
+    - Robustness scoring
+  end note
+else (no)
+endif
+
+:Sort talents by final score (descending);
+
+:Apply result limit (10 for Enhanced DSS);
+
+:Generate methodology explanation;
+note right
+  Transparency features:
+  - Score breakdown by competency
+  - Location contribution details
+  - Critical competency bonuses
+  - Confidence factor analysis
+  - Academic compliance notes
+end note
+
+:Return ranked talent results;
+
+stop
+
+@enduml

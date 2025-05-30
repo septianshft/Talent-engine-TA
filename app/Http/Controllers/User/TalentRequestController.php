@@ -106,6 +106,7 @@ class TalentRequestController extends Controller
                     'work_location_type' => $validated['work_location_type'],
                     'work_location_country' => $validated['work_location_type'] === 'remote' ? null : $validated['work_location_country'],
                     'work_location_city' => $validated['work_location_type'] === 'remote' ? null : $validated['work_location_city'],
+                    'veto_threshold' => $validated['veto_threshold'] ?? 80, // Add veto threshold with default
                 ]);
 
                 // If this is a direct request, assign the talent immediately
@@ -116,12 +117,13 @@ class TalentRequestController extends Controller
                     ]);
                 }
 
-                // Prepare data for attaching competencies with proficiency levels and weights
+                // Prepare data for attaching competencies with proficiency levels, weights, and critical status
                 $competenciesToAttach = [];
                 foreach ($validated['competencies'] as $compData) {
                     $competenciesToAttach[$compData['id']] = [
                         'required_proficiency_level' => $compData['level'],
-                        'weight' => $compData['weight'] // Add weight here
+                        'weight' => $compData['weight'], // Add weight here
+                        'is_critical' => !empty($compData['is_critical']) ? true : false, // Add critical status
                     ];
                 }
 
@@ -279,5 +281,65 @@ class TalentRequestController extends Controller
         $talentRequest->delete();
 
         return redirect()->route('user.requests.index')->with('success', 'Talent request deleted successfully.');
+    }
+
+    /**
+     * Display enhanced DSS results for the specified talent request.
+     * Shows detailed analysis with Enhanced DSS vs Basic SAW comparison.
+     */
+    public function enhancedResults(TalentRequest $talentRequest)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // Ensure the user owns this request
+        if ($talentRequest->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Only show enhanced results for processed requests
+        if (!in_array($talentRequest->status, ['pending_talent', 'assigned', 'completed'])) {
+            return redirect()->route('user.requests.show', $talentRequest)
+                ->with('info', 'Enhanced results are only available for processed requests.');
+        }
+
+        // Eager load required relationships
+        $talentRequest->load([
+            'assignedTalents' => function ($query) {
+                $query->withPivot('status', 'created_at', 'updated_at');
+            },
+            'competencies' => function ($query) {
+                $query->withPivot('required_proficiency_level', 'weight', 'is_critical');
+            }
+        ]);
+
+        // Use the Enhanced Decision Support Service for analysis
+        $enhancedDSSService = app(\App\Services\EnhancedDecisionSupportService::class);
+
+        // Get all talents with competencies for comparison
+        $allTalents = User::role('talent')
+            ->with(['competencies' => function ($query) {
+                $query->withPivot('proficiency_level');
+            }])
+            ->get();
+
+        // Generate enhanced DSS results
+        $enhancedResults = $enhancedDSSService->findAndRankTalents($talentRequest, 10);
+
+        // Generate basic SAW results for comparison
+        $basicResults = $enhancedDSSService->getBasicSAWResults($talentRequest, $allTalents);
+
+        // Prepare data for the view
+        $analysisData = [
+            'request' => $talentRequest,
+            'enhancedResults' => $enhancedResults,
+            'basicResults' => $basicResults,
+            'criticalCompetencies' => $talentRequest->competencies->where('pivot.is_critical', true),
+            'vetoThreshold' => $talentRequest->veto_threshold ?? 80,
+            'totalCompetencies' => $talentRequest->competencies->count(),
+            'criticalCount' => $talentRequest->competencies->where('pivot.is_critical', true)->count(),
+        ];
+
+        return view('user.requests.enhanced-results', $analysisData);
     }
 }

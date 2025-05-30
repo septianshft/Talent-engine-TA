@@ -351,16 +351,23 @@ class EnhancedDecisionSupportService
         }
 
         // Apply veto thresholds (eliminate talents below critical thresholds)
-        $qualifiedTalents = $talents->filter(function ($talent) use ($normalizedCompetencies) {
+        $qualifiedTalents = $talents->filter(function ($talent) use ($normalizedCompetencies, $talentRequest) {
             foreach ($normalizedCompetencies as $competency) {
                 if ($competency->is_critical) {
                     $talentCompetency = $talent->competencies->firstWhere('id', $competency->id);
+
+                    // Calculate effective veto threshold using talent request's veto threshold percentage
+                    $vetoThresholdPercentage = $talentRequest->veto_threshold ?? 80; // Default to 80%
+                    $effectiveVetoThreshold = ($competency->required_proficiency_level * $vetoThresholdPercentage) / 100;
+
                     if (!$talentCompetency ||
-                        $talentCompetency->pivot->proficiency_level < $competency->veto_threshold) {
+                        $talentCompetency->pivot->proficiency_level < $effectiveVetoThreshold) {
                         Log::debug('[Enhanced DSS] Talent eliminated by veto threshold', [
                             'talent_id' => $talent->id,
                             'competency' => $competency->name,
-                            'required_threshold' => $competency->veto_threshold,
+                            'required_level' => $competency->required_proficiency_level,
+                            'veto_percentage' => $vetoThresholdPercentage,
+                            'effective_threshold' => $effectiveVetoThreshold,
                             'talent_level' => $talentCompetency->pivot->proficiency_level ?? 0
                         ]);
                         return false;
@@ -474,18 +481,37 @@ class EnhancedDecisionSupportService
             $competencyScores = [];
             $weightSum = 0; // Track weight sum for validation
 
-            // Calculate competency scores using normalized values
+            // Calculate competency scores using normalized values with critical competency bonuses
             foreach ($competencies as $competency) {
                 $normalizedPerformance = $normalizedPerformances[$talent->id][$competency->id] ?? 0;
                 $weight = $competency->normalized_weight;
-                $contribution = $normalizedPerformance * $weight;
+
+                // Apply critical competency bonus for enhanced scoring
+                $criticalBonus = 1.0; // Default multiplier
+                if ($competency->is_critical) {
+                    $talentCompetency = $talent->competencies->firstWhere('id', $competency->id);
+                    if ($talentCompetency) {
+                        $talentLevel = $talentCompetency->pivot->proficiency_level;
+                        $requiredLevel = $competency->required_proficiency_level;
+
+                        // Apply progressive bonus for exceeding critical requirements
+                        if ($talentLevel >= $requiredLevel) {
+                            $excessPerformance = ($talentLevel - $requiredLevel) / $requiredLevel;
+                            $criticalBonus = 1.0 + (0.2 * $excessPerformance); // Up to 20% bonus for critical competencies
+                        }
+                    }
+                }
+
+                $contribution = $normalizedPerformance * $weight * $criticalBonus;
                 $competencyScore += $contribution;
                 $weightSum += $weight;
 
                 $scoreBreakdown[$competency->name] = [
                     'normalized_performance' => round($normalizedPerformance, 4),
                     'weight' => round($weight, 4),
-                    'contribution' => round($contribution, 4)
+                    'critical_bonus' => round($criticalBonus, 4),
+                    'contribution' => round($contribution, 4),
+                    'is_critical' => $competency->is_critical
                 ];
 
                 // Store individual competency scores for test assertions
@@ -1030,5 +1056,96 @@ class EnhancedDecisionSupportService
             }
         }
         return $score;
+    }
+
+    /**
+     * Generate basic SAW results for comparison purposes
+     * Provides a simplified SAW calculation without advanced features
+     */
+    public function getBasicSAWResults(TalentRequest $talentRequest, Collection $talents): Collection
+    {
+        Log::info('[Enhanced DSS] Generating basic SAW results for comparison', [
+            'talent_request_id' => $talentRequest->id,
+            'talents_count' => $talents->count()
+        ]);
+
+        // Extract required competencies
+        $requiredCompetencies = $this->extractRequiredCompetencies($talentRequest);
+
+        if ($requiredCompetencies->isEmpty()) {
+            Log::warning('[Enhanced DSS] No competencies found for basic SAW calculation');
+            return collect();
+        }
+
+        // Normalize weights (basic SAW requirement)
+        $normalizedCompetencies = $this->normalizeWeights($requiredCompetencies);
+
+        // Filter talents that have all required competencies (basic filtering)
+        $qualifiedTalents = $talents->filter(function ($talent) use ($normalizedCompetencies) {
+            foreach ($normalizedCompetencies as $competency) {
+                $talentCompetency = $talent->competencies->firstWhere('id', $competency->id);
+                if (!$talentCompetency) {
+                    return false; // Must have all required competencies
+                }
+            }
+            return true;
+        });
+
+        if ($qualifiedTalents->isEmpty()) {
+            Log::warning('[Enhanced DSS] No qualified talents found for basic SAW');
+            return collect();
+        }
+
+        // Calculate basic SAW scores
+        $basicResults = $qualifiedTalents->map(function ($talent) use ($normalizedCompetencies) {
+            $totalScore = 0;
+            $competencyScores = [];
+
+            foreach ($normalizedCompetencies as $competency) {
+                $talentCompetency = $talent->competencies->firstWhere('id', $competency->id);
+
+                if ($talentCompetency) {
+                    $proficiencyLevel = $talentCompetency->pivot->proficiency_level;
+                    $normalizedProficiency = ($proficiencyLevel - self::MIN_PROFICIENCY_LEVEL) /
+                                           (self::MAX_PROFICIENCY_LEVEL - self::MIN_PROFICIENCY_LEVEL);
+                    $weightedScore = $normalizedProficiency * $competency->normalized_weight;
+                    $totalScore += $weightedScore;
+
+                    $competencyScores[] = [
+                        'competency_id' => $competency->id,
+                        'competency_name' => $competency->name,
+                        'proficiency_level' => $proficiencyLevel,
+                        'normalized_proficiency' => $normalizedProficiency,
+                        'weight' => $competency->normalized_weight,
+                        'weighted_score' => $weightedScore
+                    ];
+                }
+            }
+
+            return [
+                'talent' => $talent,
+                'total_score' => $totalScore,
+                'competency_scores' => $competencyScores,
+                'methodology' => 'Basic SAW',
+                'calculation_type' => 'basic_saw',
+                'features' => [
+                    'basic_competency_scoring' => true,
+                    'location_integration' => false,
+                    'critical_competencies' => false,
+                    'veto_thresholds' => false,
+                    'confidence_scoring' => false
+                ]
+            ];
+        });
+
+        // Sort by total score (descending)
+        $sortedResults = $basicResults->sortByDesc('total_score')->values();
+
+        Log::info('[Enhanced DSS] Basic SAW results generated', [
+            'qualified_talents' => $sortedResults->count(),
+            'top_score' => $sortedResults->first()['total_score'] ?? 0
+        ]);
+
+        return $sortedResults;
     }
 }

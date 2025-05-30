@@ -47,6 +47,7 @@ package "Models" {
         +work_location_type: enum
         +work_location_country: string
         +work_location_city: string
+        +veto_threshold: int
         +created_at: timestamp
         +updated_at: timestamp
         --
@@ -72,6 +73,7 @@ package "Models" {
         +required_proficiency_level: int
         +weight: decimal
         +is_critical: boolean
+        +veto_threshold: int
         +created_at: timestamp
         +updated_at: timestamp
     }
@@ -79,24 +81,47 @@ package "Models" {
 
 package "Services" {
     class EnhancedDecisionSupportService {
-        +MAX_SINGLE_WEIGHT_PERCENTAGE: float {static}
-        +COMPETENCY_WEIGHT_PERCENTAGE: float {static}
-        +LOCATION_WEIGHT_PERCENTAGE: float {static}
-        +MIN_PROFICIENCY_LEVEL: int {static}
-        +MAX_PROFICIENCY_LEVEL: int {static}
-        +VETO_THRESHOLD_PERCENTAGE: float {static}
-        +MIN_CONFIDENCE_SCORE: float {static}
+        +MAX_SINGLE_WEIGHT_PERCENTAGE: float {static} = 1.0
+        +COMPETENCY_WEIGHT_PERCENTAGE: float {static} = 0.85
+        +LOCATION_WEIGHT_PERCENTAGE: float {static} = 0.15
+        +MIN_PROFICIENCY_LEVEL: int {static} = 1
+        +MAX_PROFICIENCY_LEVEL: int {static} = 5
+        +VETO_THRESHOLD_PERCENTAGE: float {static} = 0.8
+        +MIN_CONFIDENCE_SCORE: float {static} = 0.6
         --
         +findAndRankTalents(request: TalentRequest, limit: int): Collection
-        +extractRequiredCompetencies(request: TalentRequest): Collection
-        +validateWeightDistribution(competencies: Collection): bool
-        +filterQualifiedTalents(talents: Collection, competencies: Collection): Collection
-        +normalizePerformanceValues(talents: Collection, competencies: Collection): Collection
-        +calculateEnhancedSAWScores(talents: Collection, competencies: Collection, request: TalentRequest): Collection
-        +calculateLocationCompatibility(talent: User, request: TalentRequest): float
-        +calculateConfidenceScore(talent: User, competencies: Collection): float
-        +generateMethodologyExplanation(): string
-        +performSensitivityAnalysis(talents: Collection, competencies: Collection): array
+        +calculateBasicSAWScores(request: TalentRequest, limit: int): Collection
+        -extractRequiredCompetencies(request: TalentRequest): Collection
+        -validateWeightDistribution(weights: array): void
+        -normalizeWeights(competencies: Collection): Collection
+        -filterQualifiedTalents(competencies: Collection, request: TalentRequest): Collection
+        -normalizePerformanceValues(talents: Collection, competencies: Collection): array
+        -calculateEnhancedSAWScores(talents: Collection, competencies: Collection, request: TalentRequest): Collection
+        -calculateNormalizedLocationScore(talent: User, request: TalentRequest): float
+        -calculateLocationCompatibility(talent: User, request: TalentRequest): float
+        -calculateConfidenceScore(talent: User, competencies: Collection): float
+        -calculateConfidenceFactors(talent: User, competencies: Collection): array
+        -calculateSensitivityScoresForTalent(talent: User, competencies: Collection, talents: Collection): array
+        -calculateVariance(values: array): float
+        +getMethodologyExplanation(): array
+    }
+
+    class DecisionSupportService {
+        +MAX_SINGLE_WEIGHT_PERCENTAGE: float {static} = 0.8
+        --
+        +findAndRankTalents(request: TalentRequest, limit: int): Collection
+        -normalizeWeights(competencies: Collection): Collection
+        -calculateSAWScores(talents: Collection, competencies: Collection): Collection
+        -calculateLocationScore(talent: User, request: TalentRequest): float
+        +getMethodologyDescription(): array
+    }
+
+    class DecisionSupportService_SAW_Compliant {
+        --
+        +findAndRankTalents(request: TalentRequest, limit: int): Collection
+        -normalizeWeights(competencies: Collection): Collection
+        -calculateSAWScores(talents: Collection, competencies: Collection): Collection
+        +getMethodologyDescription(): array
     }
 }
 
@@ -108,6 +133,7 @@ package "Controllers" {
         +store(request: TalentRequestRequest): RedirectResponse
         +storeDirect(request: Request, talent: User): RedirectResponse
         +show(talentRequest: TalentRequest): View
+        +enhancedResults(talentRequest: TalentRequest): View
         +destroy(talentRequest: TalentRequest): RedirectResponse
     }
 
@@ -117,6 +143,15 @@ package "Controllers" {
         +assign(request: Request, talentRequest: TalentRequest): RedirectResponse
         +reject(talentRequest: TalentRequest): RedirectResponse
         +complete(talentRequest: TalentRequest): RedirectResponse
+        +enhancedResults(talentRequest: TalentRequest): View
+        +exportResults(talentRequest: TalentRequest): Response
+    }
+
+    class TalentController {
+        +index(): View
+        +show(talent: User): View
+        +search(request: Request): View
+        +requestTalent(talent: User): View
     }
 }
 
@@ -166,10 +201,17 @@ User ||--o{ CompetencyUser : "has competencies"
 User ||--o{ RoleUser : "has roles"
 Role ||--o{ RoleUser : "assigned to"
 
-' Service dependencies
-TalentRequestController ..> EnhancedDecisionSupportService : "uses"
-AdminTalentRequestController ..> EnhancedDecisionSupportService : "uses"
+' Service dependencies and usage
+TalentRequestController ..> EnhancedDecisionSupportService : "uses Enhanced DSS"
+AdminTalentRequestController ..> EnhancedDecisionSupportService : "uses Enhanced DSS"
+TalentRequestController ..> DecisionSupportService : "uses Basic DSS"
+AdminTalentRequestController ..> DecisionSupportService : "uses Basic DSS"
 TalentRequestController ..> TalentRequestRequest : "validates with"
+TalentController ..> EnhancedDecisionSupportService : "uses for search"
+
+' Alternative service relationships
+EnhancedDecisionSupportService ..> DecisionSupportService : "extends functionality"
+DecisionSupportService_SAW_Compliant ..> DecisionSupportService : "SAW compliance variant"
 
 ' Model relationships (detailed)
 User::competencies --> CompetencyUser
@@ -182,26 +224,47 @@ Competency::users --> CompetencyUser
 Competency::talentRequests --> CompetencyTalentRequest
 
 note right of EnhancedDecisionSupportService
-  Implements SAW (Simple Additive Weighting) algorithm
-  - Competency scoring: 85% weight
-  - Location scoring: 15% weight
-  - Veto thresholds for minimum requirements
-  - Confidence metrics for recommendations
+  **Enhanced SAW Algorithm Implementation**
+
+  Critical Features:
+  - Veto threshold system (60-100% configurable)
+  - Critical competency bonuses (up to 20%)
+  - Location intelligence scoring (15% weight)
+  - Mathematical SAW compliance
+  - Min-max normalization with edge case handling
+  - Confidence scoring and sensitivity analysis
+
+  Formula: Final_Score = (Competency_Score × 0.85) + (Location_Score × 0.15)
+
+  Standards: Complies with international MCDM/SAW standards
 end note
 
 note bottom of TalentRequest
   Status values:
-  - pending_admin
-  - pending_talent
-  - approved
-  - rejected
-  - completed
+  - pending_admin (awaiting admin review)
+  - pending_talent (awaiting talent response)
+  - approved (talent assignment confirmed)
+  - rejected (rejected by admin or talent)
+  - completed (project completed)
+
+  Work location types:
+  - on_site (requires physical presence)
+  - remote (fully remote work)
+  - hybrid (combination of on-site and remote)
 end note
 
 note bottom of CompetencyTalentRequest
-  Weight values: 0.0 - 1.0
-  Proficiency levels: 1-5
-  Critical flag for veto thresholds
+  Enhanced pivot table with critical competency support:
+
+  - Weight values: 0.0 - 100.0 (percentage weights)
+  - Proficiency levels: 1-5 (skill assessment scale)
+  - is_critical: Boolean flag for veto threshold application
+  - veto_threshold: 60-100% (configurable elimination threshold)
+
+  Business Rules:
+  - Maximum 70% of competencies can be marked as critical
+  - Veto threshold eliminates talents below percentage of required level
+  - Critical competencies receive progressive bonus (up to 20%)
 end note
 
 @enduml

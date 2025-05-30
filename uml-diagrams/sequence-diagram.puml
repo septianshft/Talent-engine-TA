@@ -1,8 +1,8 @@
-@startuml TalentConnect_Sequence_Diagram
+@startuml Enhanced_DSS_Sequence_Diagram
 !theme plain
 
-title TalentConnect - Talent Request Workflow Sequence Diagram
-note over User, Database : "Version 1.2.0 - May 2025"
+title Enhanced Decision Support System - Complete Workflow Sequence
+note over User, Database : "Version 1.2.0 - Enhanced DSS with Critical Competencies and Veto Thresholds"
 
 actor User as "Requesting User"
 actor Admin as "Administrator"
@@ -10,23 +10,35 @@ actor Talent as "Talent User"
 participant TalentRequestController as "Controller"
 participant TalentRequestRequest as "Request\nValidation"
 participant EnhancedDSS as "Enhanced DSS\nService"
+participant BasicDSS as "Basic DSS\nService"
 participant TalentRequest as "TalentRequest\nModel"
 participant Database as "Database"
 
-== Regular Talent Request Flow ==
+== Enhanced Talent Request Creation Flow ==
 
 User -> TalentRequestController: create()
 activate TalentRequestController
 TalentRequestController -> Database: fetch competencies
-TalentRequestController --> User: show create form
+TalentRequestController --> User: show create form with critical competency UI
 deactivate TalentRequestController
+
+note over User
+  User configures:
+  - Competency weights (0-100%)
+  - Critical competency toggles
+  - Veto threshold slider (60-100%)
+  - Location preferences
+end note
 
 User -> TalentRequestController: store(request)
 activate TalentRequestController
 TalentRequestController -> TalentRequestRequest: validate()
 activate TalentRequestRequest
-TalentRequestRequest -> TalentRequestRequest: check competency weights
-TalentRequestRequest -> TalentRequestRequest: validate required fields
+
+TalentRequestRequest -> TalentRequestRequest: validateCriticalCompetencyRules()
+note right: Business rules:\n- Max 70% critical competencies\n- Valid veto threshold range\n- Weight distribution compliance
+TalentRequestRequest -> TalentRequestRequest: validateWeightDistribution()
+TalentRequestRequest -> TalentRequestRequest: validateRequiredFields()
 TalentRequestRequest --> TalentRequestController: validated data
 deactivate TalentRequestRequest
 
@@ -34,20 +46,166 @@ TalentRequestController -> Database: begin transaction
 TalentRequestController -> TalentRequest: create()
 activate TalentRequest
 TalentRequest -> Database: insert talent_requests
-TalentRequest -> Database: attach competencies with weights
+TalentRequest -> Database: attach competencies with:\n- weights, critical flags, veto_threshold
 TalentRequest --> TalentRequestController: created request
 deactivate TalentRequest
 TalentRequestController -> Database: commit transaction
-TalentRequestController --> User: redirect with success
+TalentRequestController --> User: redirect with success message
 deactivate TalentRequestController
 
-== Admin Review Process ==
+== Enhanced DSS Processing Flow ==
 
-Admin -> AdminTalentRequestController: index()
+Admin -> AdminTalentRequestController: show(talentRequest)
 activate AdminTalentRequestController
-AdminTalentRequestController -> Database: fetch pending requests
-AdminTalentRequestController --> Admin: show requests list
+
+AdminTalentRequestController -> EnhancedDSS: findAndRankTalents(request, 10)
+activate EnhancedDSS
+
+EnhancedDSS -> EnhancedDSS: extractRequiredCompetencies()
+note right: Extract competencies with:\n- required levels, weights\n- critical flags, veto thresholds
+
+EnhancedDSS -> EnhancedDSS: validateWeightDistribution()
+note right: Academic compliance:\n- Total ≤ 100%\n- Single competency ≤ 100%\n- Prevent extreme dominance (>90%)
+
+EnhancedDSS -> EnhancedDSS: normalizeWeights()
+note right: Weight normalization:\nnormalized = (weight/total) × 0.85\nLocation weight: 0.15
+
+EnhancedDSS -> Database: find talents with 'talent' role
+Database --> EnhancedDSS: potential talents
+
+EnhancedDSS -> EnhancedDSS: filterQualifiedTalents()
+note right: Mandatory filtering:\n- Must have all competencies\n- Meet minimum proficiency levels
+
+EnhancedDSS -> EnhancedDSS: applyVetoThresholds()
+note right: Critical competency veto:\neffective_threshold = required × (veto%/100)\nEliminate talents below threshold
+
+alt Veto threshold violations
+    EnhancedDSS -> EnhancedDSS: logVetoEliminations()
+    note right: Log detailed elimination reasons:\n- Talent ID, competency name\n- Required vs actual levels\n- Veto threshold applied
+end
+
+EnhancedDSS -> EnhancedDSS: normalizePerformanceValues()
+note right: Min-Max normalization:\n(current - min) / (max - min)\nEdge case: if range=0, use requirement-based scoring
+
+EnhancedDSS -> EnhancedDSS: calculateEnhancedSAWScores()
+note right: Enhanced SAW calculation:\n- Competency scoring (85%)\n- Critical competency bonuses (up to 20%)\n- Location intelligence (15%)\n- Mathematical validation
+
+loop For each qualified talent
+    EnhancedDSS -> EnhancedDSS: calculateCompetencyScore()
+    note right: Weighted sum with critical bonuses
+
+    EnhancedDSS -> EnhancedDSS: calculateLocationScore()
+    note right: Multi-factor location scoring:\n- Country: 50%, City: 30%, Timezone: 20%\n- Work type adjustments
+
+    EnhancedDSS -> EnhancedDSS: calculateFinalSAWScore()
+    note right: Final = (Competency × 0.85) + (Location × 0.15)
+
+    EnhancedDSS -> EnhancedDSS: calculateConfidenceScore()
+    note right: Multi-factor confidence:\n- Coverage, consistency, over-qualification
+
+    alt Top candidates only
+        EnhancedDSS -> EnhancedDSS: calculateSensitivityScores()
+        note right: Robustness analysis:\n- Weight sensitivity\n- Ranking stability
+    end
+end
+
+EnhancedDSS -> EnhancedDSS: sortByScoreDescending()
+EnhancedDSS -> EnhancedDSS: limitResults(10)
+EnhancedDSS -> EnhancedDSS: generateMethodologyExplanation()
+
+EnhancedDSS --> AdminTalentRequestController: ranked talents with scores
+deactivate EnhancedDSS
+
+== Dual Algorithm Comparison ==
+
+AdminTalentRequestController -> BasicDSS: findAndRankTalents(request, 5)
+activate BasicDSS
+BasicDSS -> BasicDSS: calculateBasicSAWScores()
+note right: Basic SAW without:\n- Veto thresholds\n- Critical bonuses\n- Advanced location scoring
+BasicDSS --> AdminTalentRequestController: basic SAW results
+deactivate BasicDSS
+
+AdminTalentRequestController -> AdminTalentRequestController: prepareComparisonView()
+note right: Side-by-side comparison:\n- Enhanced DSS (10 results)\n- Basic SAW (5 results)\n- Score breakdowns\n- Methodology differences
+
+AdminTalentRequestController --> Admin: enhanced results view with comparison
 deactivate AdminTalentRequestController
+
+== Admin Decision Making ==
+
+note over Admin
+  Admin reviews:
+  - Enhanced DSS rankings
+  - Basic SAW comparison
+  - Score breakdowns
+  - Confidence indicators
+  - Methodology explanations
+end note
+
+Admin -> AdminTalentRequestController: assign(selectedTalents)
+activate AdminTalentRequestController
+
+AdminTalentRequestController -> Database: begin transaction
+AdminTalentRequestController -> TalentRequest: assignTalents()
+AdminTalentRequestController -> Database: insert talent_request_assignments
+AdminTalentRequestController -> Database: update request status to 'pending_talent'
+AdminTalentRequestController -> Database: commit transaction
+
+AdminTalentRequestController --> Admin: assignment confirmation
+deactivate AdminTalentRequestController
+
+== Talent Response Flow ==
+
+loop For each assigned talent
+    Talent -> TalentController: viewAssignment()
+    activate TalentController
+    TalentController -> Database: fetch assignment details
+    TalentController --> Talent: show assignment with project details
+    deactivate TalentController
+
+    alt Accept assignment
+        Talent -> TalentController: acceptAssignment()
+        activate TalentController
+        TalentController -> Database: update assignment status to 'approved'
+        TalentController --> Talent: confirmation message
+        deactivate TalentController
+    else Reject assignment
+        Talent -> TalentController: rejectAssignment()
+        activate TalentController
+        TalentController -> Database: update assignment status to 'rejected'
+        TalentController --> Talent: rejection recorded
+        deactivate TalentController
+    end
+end
+
+== Error Handling Scenarios ==
+
+alt Weight validation error
+    TalentRequestRequest -> TalentRequestRequest: validateWeights()
+    TalentRequestRequest --> TalentRequestController: ValidationException
+    TalentRequestController --> User: error message with correction guidance
+end
+
+alt Critical competency business rule violation
+    TalentRequestRequest -> TalentRequestRequest: validateCriticalRatio()
+    TalentRequestRequest --> TalentRequestController: ValidationException
+    note right: "Maximum 70% of competencies can be critical"
+    TalentRequestController --> User: business rule violation message
+end
+
+alt No qualified talents after veto
+    EnhancedDSS -> EnhancedDSS: filterQualifiedTalents()
+    EnhancedDSS --> AdminTalentRequestController: empty collection
+    AdminTalentRequestController --> Admin: "No talents meet critical requirements" message
+end
+
+alt Mathematical validation failure
+    EnhancedDSS -> EnhancedDSS: validateWeightSum()
+    EnhancedDSS -> EnhancedDSS: logMathematicalError()
+    EnhancedDSS --> AdminTalentRequestController: error with technical details
+end
+
+@enduml
 
 Admin -> AdminTalentRequestController: show(request)
 activate AdminTalentRequestController

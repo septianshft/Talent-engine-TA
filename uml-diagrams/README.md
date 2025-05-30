@@ -1,158 +1,213 @@
-# UML Diagrams - TalentConnect System
+# UML Diagrams - Enhanced Decision Support System (DSS)
 
-This folder contains comprehensive UML diagrams for the TalentConnect talent management system, designed using PlantUML format. These diagrams provide visual documentation of the system architecture, workflows, and component relationships.
+This folder contains comprehensive UML diagrams for the TalentConnect talent management system with Enhanced Decision Support System (DSS), designed using PlantUML format. These diagrams provide visual documentation of the system architecture, Enhanced DSS workflows, critical competency features, and component relationships.
 
-## 📋 Diagram Overview
+## 📋 Enhanced DSS Diagram Overview
 
 ### 1. Class Diagram (`class-diagram.puml`)
-**Purpose**: Shows the static structure of the system including models, services, controllers, and their relationships.
+**Purpose**: Shows the static structure of the Enhanced DSS system including models, services, controllers, and their relationships with critical competency features.
 
 **Key Components**:
-- **Models**: User, Role, TalentRequest, Competency, CompetencyTalentRequest
-- **Services**: EnhancedDecisionSupportService (SAW algorithm implementation)
-- **Controllers**: TalentRequestController, AdminTalentRequestController
+- **Models**: User, Role, TalentRequest, Competency, CompetencyTalentRequest (with veto_threshold, is_critical)
+- **Enhanced DSS Services**: 
+  - EnhancedDecisionSupportService (Enhanced DSS with critical competency veto)
+  - DecisionSupportService (Basic SAW algorithm)
+  - DecisionSupportService_SAW_Compliant (Academic standard SAW)
+- **Controllers**: TalentRequestController, AdminTalentRequestController (Enhanced DSS methods)
 - **Pivot Tables**: role_user, competency_user, talent_request_assignments
 
-**Notable Features**:
-- Complete relationship mapping (One-to-Many, Many-to-Many)
-- Method signatures for key operations
-- Service dependencies and usage patterns
-- Detailed notes on status values and weight ranges
+**Enhanced Features**:
+- Critical competency veto thresholds (60-100% configurable)
+- Progressive bonus system (up to 20% for critical competencies)
+- Location intelligence scoring (15% weight)
+- Mathematical SAW compliance validation
+- Dual algorithm comparison capabilities
 
-### 2. Sequence Diagram (`sequence-diagram.puml`)
-**Purpose**: Illustrates the dynamic behavior and interaction flow between system components during talent request processes.
+### 2. Enhanced Sequence Diagram (`sequence-diagram.puml`)
+**Purpose**: Illustrates the Enhanced DSS workflow with critical competency veto logic, dual algorithm comparison, and comprehensive error handling.
 
-**Covered Workflows**:
-- **Regular Talent Request Flow**: User creates request → Admin reviews → DSS processing → Assignment
-- **Direct Talent Request Flow**: User directly requests specific talent → Immediate assignment
-- **Admin Review Process**: DSS ranking, talent selection, and assignment
-- **Talent Response Process**: Accept/reject assignments
-- **Error Handling**: Validation errors, database errors, DSS calculation errors
+**Enhanced Workflows**:
+- **Enhanced DSS Flow**: Critical competency configuration → Veto threshold application → Progressive bonus calculation
+- **Dual Algorithm Comparison**: Enhanced DSS vs Basic SAW side-by-side analysis
+- **Critical Competency Management**: Veto threshold validation and elimination logging
+- **Location Intelligence**: Multi-factor location scoring integration
+- **Error Handling**: Mathematical validation failures, business rule violations
 
-**Key Interactions**:
-- Form validation and request processing
-- Enhanced DSS service calculations
-- Database transactions and rollback scenarios
-- Multi-actor workflow coordination
+**Key Enhanced Interactions**:
+- Critical competency configuration UI flow
+- Veto threshold enforcement and candidate elimination
+- Progressive bonus calculations with confidence scoring
+- Advanced mathematical validation processes
 
-### 3. Use Case Diagram (`usecase-diagram.puml`)
-**Purpose**: Defines system functionality from user perspective, showing what each actor can do within the system.
+### 3. Enhanced Use Case Diagram (`usecase-diagram-enhanced-dss.puml`)
+**Purpose**: Defines Enhanced DSS functionality with 52 comprehensive use cases covering critical competency management, advanced analytics, and mathematical validation.
 
-**Actors**:
-- **Requesting User**: Creates and manages talent requests
-- **Administrator**: Reviews requests, manages assignments, system oversight
-- **Talent**: Responds to assignments, manages availability
-- **System**: Automated processes and notifications
+**Enhanced Actors**:
+- **Requesting User**: Enhanced request creation with critical competency specification
+- **Administrator**: Enhanced DSS configuration, dual algorithm comparison, advanced analytics
+- **Talent**: Enhanced assignment responses with competency validation
+- **System**: Enhanced automated processes with mathematical compliance
 
-**Function Categories**:
-- **Authentication & Profile**: Registration, login, profile management
-- **Talent Request Management**: Create, edit, delete requests with competency specifications
-- **Administrative Functions**: DSS rankings, assignments, system analytics
-- **Talent Functions**: View and respond to assignments
-- **Discovery Features**: Search and filter talents
-- **Decision Support**: Automated ranking and recommendations
+**Enhanced Function Categories**:
+- **Enhanced DSS Core Functions**: Critical competency veto, progressive bonuses, location intelligence
+- **Critical Competency Management**: Configuration, validation, threshold management
+- **Mathematical Validation**: SAW compliance, algorithm comparison, edge case handling
+- **Advanced Analytics**: Confidence scoring, sensitivity analysis, performance metrics
+- **System Intelligence**: Automated optimization, predictive analytics, audit trails
 
-### 4. Activity Diagram - DSS (`activity-diagram-dss.puml`)
-**Purpose**: Details the Enhanced Decision Support System workflow using SAW (Simple Additive Weighting) algorithm.
+### 4. Enhanced Activity Diagram (`activity-diagram-enhanced-dss.puml`)
+**Purpose**: Details the complete Enhanced Decision Support System workflow with critical competency veto logic, progressive bonus calculations, and location intelligence.
 
-**Process Flow**:
-1. **Input Validation**: Competency requirements and weight distribution
-2. **Talent Filtering**: Role-based filtering with veto thresholds
-3. **SAW Algorithm Process**:
-   - Competency Scoring (85% weight)
-   - Location Scoring (15% weight)
-   - Performance normalization
-4. **Ranking & Output**: Sorted recommendations with confidence scores
-5. **Sensitivity Analysis**: Alternative scenarios and robustness checks
+**Enhanced Process Flow**:
+1. **Critical Competency Configuration**: Veto threshold setup (60-100%), critical competency identification
+2. **Enhanced Input Validation**: Mathematical SAW compliance, business rule validation
+3. **Talent Filtering with Veto Logic**: Critical competency veto threshold application (eliminates unqualified candidates)
+4. **Enhanced SAW Algorithm Process**:
+   - Competency Scoring with Progressive Bonuses (up to 20% for critical competencies)
+   - Location Intelligence Scoring (15% weight with multi-factor analysis)
+   - Performance normalization with confidence metrics
+5. **Dual Algorithm Comparison**: Enhanced DSS vs Basic SAW analysis
+6. **Advanced Ranking & Output**: Sorted recommendations with confidence scores and elimination logs
+7. **Mathematical Validation**: Edge case handling, sensitivity analysis
 
-**Key Features**:
-- Parallel processing for competency and location scoring
-- Veto threshold application (80% rule)
-- Confidence score calculation
-- Error handling for edge cases
+**Enhanced Features**:
+- Critical competency veto threshold enforcement
+- Progressive bonus system for critical competencies
+- Location intelligence with distance, cost, and preference factors
+- Mathematical compliance validation
+- Comprehensive audit trail and logging
 
-### 5. State Diagram (`state-diagram.puml`)
-**Purpose**: Shows the lifecycle states of talent requests and valid transitions between states.
+### 5. Enhanced State Diagram (`state-diagram-enhanced-dss.puml`)
+**Purpose**: Shows the complete lifecycle states of Enhanced DSS talent requests with critical competency validation and advanced processing states.
 
-**State Categories**:
-- **Draft**: Initial request creation
-- **Admin Review Process**: pending_admin, dss_processing
-- **Direct Request Process**: pending_talent (direct assignments)
-- **Assignment Process**: talent_assigned, multiple talent scenarios
-- **Resolution States**: approved, rejected_admin, rejected_talent, completed
-- **Error States**: cancelled, expired
+**Enhanced State Categories**:
+- **Draft States**: Initial request creation with critical competency setup
+- **Validation States**: Critical competency validation, veto threshold checks, mathematical compliance
+- **Enhanced DSS Processing**: enhanced_dss_processing, critical_competency_analysis, location_intelligence_scoring
+- **Dual Algorithm States**: algorithm_comparison, confidence_analysis
+- **Enhanced Assignment Process**: enhanced_assignment, progressive_bonus_applied
+- **Advanced Resolution States**: mathematical_validation, audit_completed
+- **Error States**: veto_threshold_failed, validation_failed, compliance_error
 
-**State Transitions**:
-- User actions (submit, cancel)
-- Admin actions (assign, reject, complete)
-- Talent actions (accept, reject)
-- System actions (timeout, validation)
+**Enhanced State Transitions**:
+- Critical competency configuration actions
+- Mathematical validation processes
+- Enhanced DSS processing workflows
+- Veto threshold enforcement transitions
+- Advanced audit and compliance flows
 
-## 🛠 How to Use These Diagrams
+### 6. Enhanced Component Diagram (`component-diagram-enhanced-dss.puml`)
+**Purpose**: Shows the Enhanced DSS system architecture with critical competency system, mathematical validation, and location intelligence components.
 
-### Viewing the Diagrams
+**Enhanced Component Architecture**:
+- **Enhanced DSS Core**: Critical competency veto, progressive bonuses, dual algorithm engine
+- **Mathematical Validation System**: SAW compliance checker, edge case handlers, validation engine
+- **Critical Competency System**: Veto threshold manager, progressive bonus calculator, competency analyzer
+- **Location Intelligence**: Distance calculator, cost analyzer, preference engine, multi-factor scorer
+- **Advanced Analytics**: Confidence scoring, sensitivity analysis, performance metrics, audit system
+- **Integration Layer**: Algorithm comparison, data validation, compliance reporting
+
+**Component Relationships**:
+- Enhanced DSS service dependencies with mathematical validation
+- Critical competency system integration with talent filtering
+- Location intelligence integration with scoring algorithms
+- Advanced analytics integration with audit and compliance systems
+
+## 🛠 How to Use Enhanced DSS Diagrams
+
+### Viewing the Enhanced DSS Diagrams
 1. **Online PlantUML Editor**: Copy paste content to [PlantUML Online Editor](http://www.plantuml.com/plantuml/uml/)
 2. **VS Code Extension**: Install "PlantUML" extension for direct preview
 3. **Local PlantUML**: Install PlantUML locally with Java runtime
 
-### Generating Images
+### Generating Enhanced DSS Images
 ```bash
 # Using PlantUML JAR (requires Java)
 java -jar plantuml.jar *.puml
 
 # Using VS Code extension
 # Right-click on .puml file → "Preview Current PlantUML"
+
+# Generate all Enhanced DSS diagrams
+java -jar plantuml.jar class-diagram.puml
+java -jar plantuml.jar sequence-diagram.puml
+java -jar plantuml.jar activity-diagram-enhanced-dss.puml
+java -jar plantuml.jar state-diagram-enhanced-dss.puml
+java -jar plantuml.jar usecase-diagram-enhanced-dss.puml
+java -jar plantuml.jar component-diagram-enhanced-dss.puml
 ```
 
-### Integration with Documentation
-These diagrams are referenced in:
-- `docs/Enhanced_DSS_Documentation.md` - Technical implementation details
-- `docs/SAW_Implementation_Analysis.md` - Algorithm-specific documentation
-- `README.md` - System overview and architecture
-- `CHANGELOG.md` - Version history and changes
+### Integration with Enhanced DSS Documentation
+These Enhanced DSS diagrams are referenced in:
+- `docs/Enhanced_DSS_Documentation.md` - Enhanced DSS technical implementation details
+- `docs/Critical_Competency_Analysis.md` - Critical competency veto system documentation
+- `docs/SAW_Implementation_Analysis.md` - Algorithm-specific documentation with Enhanced DSS features
+- `docs/Location_Intelligence_Documentation.md` - Location scoring system details
+- `README.md` - Enhanced DSS system overview and architecture
+- `CHANGELOG.md` - Enhanced DSS version history and feature updates
 
-## 📊 Technical Specifications
+## 📊 Enhanced DSS Technical Specifications
 
-**System Version**: 1.2.0 (May 2025)
-**Framework**: Laravel 11.x
+**Enhanced DSS Version**: 2.0.0 (May 2025)
+**Framework**: Laravel 11.x with Enhanced DSS Services
 **Database**: SQLite (development), MySQL/PostgreSQL (production)
-**Algorithm**: Enhanced SAW (Simple Additive Weighting)
-**Architecture**: MVC with Service Layer
+**Core Algorithm**: Enhanced SAW (Simple Additive Weighting) with Critical Competency Veto
+**Architecture**: MVC with Enhanced Service Layer and Mathematical Validation
 
-**Key Metrics**:
-- **Models**: 5 primary, 3 pivot tables
-- **Controllers**: 6 main controllers
-- **Services**: 1 core DSS service
-- **Use Cases**: 30+ functional requirements
-- **States**: 12 distinct request states
+**Enhanced DSS Key Metrics**:
+- **Models**: 5 primary, 3 pivot tables (with critical competency fields)
+- **Enhanced Services**: 3 DSS service variants (Enhanced, Basic, SAW_Compliant)
+- **Controllers**: 6 main controllers with Enhanced DSS methods
+- **Use Cases**: 52 Enhanced DSS functional requirements
+- **States**: 15+ distinct Enhanced DSS processing states
+- **Algorithms**: Dual algorithm comparison capability
+- **Validation**: Mathematical SAW compliance checking
 
-## 🔄 Maintenance and Updates
+**Enhanced DSS Features**:
+- **Critical Competency Veto**: Configurable thresholds (60-100%)
+- **Progressive Bonus System**: Up to 20% bonus for critical competencies
+- **Location Intelligence**: 15% weight with multi-factor analysis
+- **Mathematical Validation**: Academic standard SAW compliance
+- **Confidence Scoring**: Advanced reliability metrics
+- **Audit Trail**: Comprehensive elimination and decision logging
 
-When updating these diagrams:
+## 🔄 Enhanced DSS Maintenance and Updates
 
-1. **Model Changes**: Update class diagram relationships and attributes
-2. **Workflow Changes**: Modify sequence and activity diagrams
-3. **New Features**: Add use cases and state transitions
-4. **Algorithm Updates**: Revise DSS activity diagram
-5. **Version Control**: Update version notes in diagram headers
+When updating Enhanced DSS diagrams:
 
-## 📝 Notes
+1. **Enhanced Model Changes**: Update class diagram with critical competency relationships and veto threshold attributes
+2. **Enhanced Workflow Changes**: Modify sequence and activity diagrams for new DSS features
+3. **New Enhanced Features**: Add use cases for critical competency management and mathematical validation
+4. **Algorithm Updates**: Revise Enhanced DSS activity diagram for new SAW enhancements
+5. **Critical Competency Changes**: Update state diagrams for veto threshold transitions
+6. **Mathematical Validation**: Update component diagrams for new validation systems
+7. **Version Control**: Update Enhanced DSS version notes in diagram headers
 
-- All diagrams use PlantUML's plain theme for consistency
-- Diagrams include version information and creation dates
-- Color coding and icons enhance readability
-- Comments within .puml files explain complex relationships
-- Diagrams are designed for both technical and business stakeholders
+## 📝 Enhanced DSS Notes
 
-## 🔗 Related Documentation
+- All Enhanced DSS diagrams use PlantUML's plain theme for consistency
+- Diagrams include Enhanced DSS version information and creation dates
+- Enhanced color coding and icons for critical competency features
+- Comprehensive comments within .puml files explain Enhanced DSS relationships
+- Diagrams designed for technical teams, business stakeholders, and academic review
+- Mathematical notation and formulas included for SAW compliance validation
+- Critical competency veto logic clearly documented with decision paths
 
-- [Enhanced DSS Documentation](../docs/Enhanced_DSS_Documentation.md)
-- [SAW Implementation Analysis](../docs/SAW_Implementation_Analysis.md)
-- [System Integration Notes](../integration_notes.md)
-- [Deployment Guide](../DEPLOYMENT_GUIDE.md)
+## 🔗 Related Enhanced DSS Documentation
+
+- [Enhanced DSS Documentation](../docs/Enhanced_DSS_Documentation.md) - Complete Enhanced DSS technical implementation
+- [Critical Competency Analysis](../docs/Critical_Competency_Analysis.md) - Veto threshold system and progressive bonuses
+- [SAW Implementation Analysis](../docs/SAW_Implementation_Analysis.md) - Algorithm comparison and mathematical validation
+- [Location Intelligence Documentation](../docs/Location_Intelligence_Documentation.md) - Multi-factor location scoring system
+- [Mathematical Validation Guide](../docs/Mathematical_Validation_Guide.md) - SAW compliance and academic standards
+- [Enhanced DSS API Reference](../docs/Enhanced_DSS_API_Reference.md) - Service methods and integration guide
+- [System Integration Notes](../integration_notes.md) - Enhanced DSS integration patterns
+- [Deployment Guide](../DEPLOYMENT_GUIDE.md) - Enhanced DSS deployment considerations
 
 ---
 
 **Last Updated**: May 27, 2025  
-**Created By**: System Architecture Team  
-**PlantUML Version**: Compatible with v1.2024.x and later
+**Enhanced DSS Version**: 2.0.0  
+**Created By**: Enhanced DSS Architecture Team  
+**PlantUML Version**: Compatible with v1.2024.x and later  
+**Documentation Status**: Complete Enhanced DSS Coverage

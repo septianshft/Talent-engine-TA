@@ -90,6 +90,27 @@
             @endif
         </div>
 
+        {{-- Enhanced DSS Results Section --}}
+        @if(in_array($talentRequest->status, ['pending_talent', 'assigned', 'completed']))
+        <div class="px-6 py-4 sm:px-8 bg-orange-50 dark:bg-orange-900/20 border-t border-orange-200 dark:border-orange-800">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-medium text-orange-900 dark:text-orange-100">Enhanced DSS Analysis</h3>
+                    <p class="mt-1 text-sm text-orange-700 dark:text-orange-300">
+                        View detailed talent ranking analysis with Enhanced Decision Support System featuring critical competency evaluation and SAW methodology comparison.
+                    </p>
+                </div>
+                <a href="{{ route('user.requests.enhanced-results', $talentRequest) }}"
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 012-2h2a2 2 0 012 2v6.5"></path>
+                    </svg>
+                    View Enhanced Results
+                </a>
+            </div>
+        </div>
+        @endif
+
         @if ($talentRequest->assignedTalents && $talentRequest->assignedTalents->count() > 0)
             <div class="px-6 py-5 sm:px-8 sm:py-6 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Assigned Talents & Statuses</h3>

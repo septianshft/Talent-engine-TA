@@ -1,0 +1,260 @@
+@startuml Enhanced_DSS_UseCase_Diagram
+!theme plain
+
+title Enhanced Decision Support System - Use Case Diagram
+note top : "Version 1.2.0 - Enhanced DSS with Critical Competencies\nComprehensive Talent Management System"
+
+' Define actors
+actor "Requesting User" as User
+actor "Administrator" as Admin
+actor "Talent" as Talent
+actor "Enhanced DSS System" as DSS
+
+' Define system boundary
+rectangle "Enhanced TalentConnect System" {
+
+    ' Authentication & Profile Management
+    package "Authentication & Profile Management" {
+        usecase "Register Account" as UC1
+        usecase "Login/Logout" as UC2
+        usecase "Update Profile Information" as UC3
+        usecase "Manage Competency Portfolio" as UC4
+        usecase "Set Proficiency Levels" as UC5
+        usecase "Update Location Details" as UC6
+        usecase "View Personal Dashboard" as UC7
+    }
+
+    ' Enhanced Talent Request Management
+    package "Enhanced Talent Request Management" {
+        usecase "Create Standard Talent Request" as UC8
+        usecase "Create Direct Talent Request" as UC9
+        usecase "Configure Competency Requirements" as UC10
+        usecase "Set Competency Weights (0-100%)" as UC11
+        usecase "Mark Critical Competencies" as UC12
+        usecase "Configure Veto Threshold (60-100%)" as UC13
+        usecase "Specify Location Preferences" as UC14
+        usecase "View My Active Requests" as UC15
+        usecase "Edit Request Details" as UC16
+        usecase "Delete Pending Requests" as UC17
+        usecase "View Request Status History" as UC18
+    }
+
+    ' Enhanced Administrative Functions
+    package "Enhanced Administrative Functions" {
+        usecase "Review Pending Requests" as UC19
+        usecase "Execute Enhanced DSS Analysis" as UC20
+        usecase "View SAW Score Rankings" as UC21
+        usecase "Compare Enhanced vs Basic DSS" as UC22
+        usecase "Analyze Score Breakdowns" as UC23
+        usecase "Review Confidence Indicators" as UC24
+        usecase "Examine Sensitivity Analysis" as UC25
+        usecase "Assign Selected Talents" as UC26
+        usecase "Reject Unrealistic Requests" as UC27
+        usecase "Mark Projects Complete" as UC28
+        usecase "Manage User Roles & Permissions" as UC29
+        usecase "View System Analytics" as UC30
+        usecase "Export DSS Results" as UC31
+    }
+
+    ' Enhanced Talent Functions
+    package "Enhanced Talent Functions" {
+        usecase "View Assignment Notifications" as UC32
+        usecase "Review Project Requirements" as UC33
+        usecase "Accept Assignment Offers" as UC34
+        usecase "Reject Assignment Offers" as UC35
+        usecase "Update Competency Levels" as UC36
+        usecase "Set Availability Status" as UC37
+        usecase "View Assignment History" as UC38
+        usecase "Provide Project Feedback" as UC39
+    }
+
+    ' Enhanced DSS Core Functions
+    package "Enhanced DSS Core Functions" {
+        usecase "Extract Required Competencies" as UC40
+        usecase "Validate Weight Distribution" as UC41
+        usecase "Apply Academic Compliance Rules" as UC42
+        usecase "Filter Qualified Talents" as UC43
+        usecase "Apply Veto Thresholds" as UC44
+        usecase "Calculate Critical Bonuses" as UC45
+        usecase "Perform Min-Max Normalization" as UC46
+        usecase "Execute SAW Algorithm" as UC47
+        usecase "Calculate Location Intelligence" as UC48
+        usecase "Generate Confidence Scores" as UC49
+        usecase "Perform Sensitivity Analysis" as UC50
+        usecase "Rank Talent Alternatives" as UC51
+        usecase "Generate Methodology Explanation" as UC52
+    }
+
+    ' System Notifications & Communication
+    package "System Notifications & Communication" {
+        usecase "Send Assignment Notifications" as UC53
+        usecase "Send Status Update Alerts" as UC54
+        usecase "Generate System Reports" as UC55
+        usecase "Maintain Audit Logs" as UC56
+        usecase "Send Deadline Reminders" as UC57
+    }
+
+    ' Data Management & Validation
+    package "Data Management & Validation" {
+        usecase "Validate Business Rules" as UC58
+        usecase "Enforce Critical Competency Limits" as UC59
+        usecase "Maintain Data Integrity" as UC60
+        usecase "Backup System Data" as UC61
+        usecase "Handle Error Recovery" as UC62
+    }
+}
+
+' User relationships
+User --> UC1 : registers
+User --> UC2 : authenticates
+User --> UC3 : maintains profile
+User --> UC4 : manages skills
+User --> UC5 : sets skill levels
+User --> UC6 : updates location
+User --> UC7 : monitors activity
+
+User --> UC8 : creates standard request
+User --> UC9 : creates direct request
+User --> UC10 : defines requirements
+User --> UC11 : assigns weights
+User --> UC12 : marks critical skills
+User --> UC13 : sets veto threshold
+User --> UC14 : specifies location
+User --> UC15 : monitors requests
+User --> UC16 : modifies requests
+User --> UC17 : removes requests
+User --> UC18 : tracks progress
+
+' Admin relationships
+Admin --> UC2 : authenticates
+Admin --> UC19 : reviews submissions
+Admin --> UC20 : triggers DSS analysis
+Admin --> UC21 : reviews rankings
+Admin --> UC22 : compares algorithms
+Admin --> UC23 : analyzes scores
+Admin --> UC24 : checks confidence
+Admin --> UC25 : reviews sensitivity
+Admin --> UC26 : makes assignments
+Admin --> UC27 : rejects requests
+Admin --> UC28 : closes projects
+Admin --> UC29 : manages users
+Admin --> UC30 : monitors system
+Admin --> UC31 : exports data
+
+' Talent relationships
+Talent --> UC2 : authenticates
+Talent --> UC32 : receives notifications
+Talent --> UC33 : reviews requirements
+Talent --> UC34 : accepts offers
+Talent --> UC35 : declines offers
+Talent --> UC36 : updates skills
+Talent --> UC37 : sets availability
+Talent --> UC38 : reviews history
+Talent --> UC39 : provides feedback
+
+' Enhanced DSS System relationships
+DSS --> UC40 : extracts competencies
+DSS --> UC41 : validates weights
+DSS --> UC42 : enforces compliance
+DSS --> UC43 : filters candidates
+DSS --> UC44 : applies veto logic
+DSS --> UC45 : calculates bonuses
+DSS --> UC46 : normalizes scores
+DSS --> UC47 : executes SAW
+DSS --> UC48 : analyzes location
+DSS --> UC49 : generates confidence
+DSS --> UC50 : analyzes sensitivity
+DSS --> UC51 : ranks alternatives
+DSS --> UC52 : explains methodology
+
+' System automatic processes
+DSS --> UC53 : sends notifications
+DSS --> UC54 : updates status
+DSS --> UC55 : generates reports
+DSS --> UC56 : logs activities
+DSS --> UC57 : sends reminders
+DSS --> UC58 : validates rules
+DSS --> UC59 : enforces limits
+DSS --> UC60 : maintains integrity
+DSS --> UC61 : performs backups
+DSS --> UC62 : handles errors
+
+' Extended relationships and dependencies
+UC8 ..> UC10 : <<include>>
+UC8 ..> UC11 : <<include>>
+UC8 ..> UC12 : <<extend>>
+UC8 ..> UC13 : <<extend>>
+UC8 ..> UC14 : <<include>>
+
+UC20 ..> UC40 : <<include>>
+UC20 ..> UC41 : <<include>>
+UC20 ..> UC42 : <<include>>
+UC20 ..> UC43 : <<include>>
+UC20 ..> UC44 : <<include>>
+UC20 ..> UC47 : <<include>>
+UC20 ..> UC48 : <<include>>
+
+UC21 ..> UC49 : <<include>>
+UC21 ..> UC50 : <<extend>>
+UC21 ..> UC52 : <<include>>
+
+UC26 ..> UC53 : <<include>>
+UC27 ..> UC54 : <<include>>
+UC28 ..> UC54 : <<include>>
+
+' Critical competency workflow extensions
+UC12 ..> UC59 : <<include>>
+UC13 ..> UC58 : <<include>>
+UC44 ..> UC45 : <<extend>>
+
+' Notes for Enhanced DSS features
+note right of UC20
+  **Enhanced DSS Analysis Includes:**
+
+  • Critical competency veto thresholds
+  • Progressive bonus calculations (up to 20%)
+  • Location intelligence scoring (15% weight)
+  • Mathematical SAW compliance validation
+  • Multi-factor confidence assessment
+  • Sensitivity analysis for top candidates
+  • Academic weight distribution rules
+  • Edge case handling (zero-range normalization)
+end note
+
+note left of UC12
+  **Critical Competency Configuration:**
+
+  • Maximum 70% of competencies can be critical
+  • Veto threshold range: 60-100%
+  • Automatic elimination below threshold
+  • Progressive bonus for exceeding requirements
+  • Business rule validation and enforcement
+end note
+
+note bottom of UC47
+  **SAW Algorithm Implementation:**
+
+  Formula: Final_Score = (Competency_Score × 0.85) + (Location_Score × 0.15)
+
+  Standards Compliance:
+  • International MCDM/SAW methodology
+  • Min-max normalization with edge cases
+  • Mathematical bounds enforcement [0,1]
+  • Academic weight validation rules
+end note
+
+note top of UC22
+  **Dual Algorithm Comparison:**
+
+  Enhanced DSS (10 results):
+  • Advanced filtering and scoring
+  • Critical competency features
+  • Location intelligence
+
+  Basic SAW (5 results):
+  • Standard implementation
+  • Comparison baseline
+  • Academic reference
+end note
+
+@enduml
