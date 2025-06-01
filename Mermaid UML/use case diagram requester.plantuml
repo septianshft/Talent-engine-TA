@@ -1,0 +1,55 @@
+@startuml RequesterUseCaseDiagram
+
+left to right direction
+actor "Requester (User)" as Requester
+
+package "TalentConnect System" {
+
+    package "Account & General" {
+        usecase "Login / Logout" as UC01
+        usecase "View Dashboard" as UC02
+        usecase "Manage Profile Settings" as UC03
+        usecase "Change Password" as UC04
+        usecase "Manage Appearance Settings" as UC05
+    }
+
+    package "Talent Request Management" {
+        usecase "Create Standard Talent Request" as UC10
+        usecase "Configure Competencies for Request" as UC11
+        usecase "Set Critical Competencies & Veto" as UC12
+        usecase "Specify Location Preferences for Request" as UC13
+        usecase "Create Direct Talent Request (for specific talent)" as UC14
+        usecase "View My Talent Requests (List)" as UC15
+        usecase "View Talent Request Details" as UC16
+        usecase "View Enhanced DSS Results for Request" as UC17
+        usecase "Delete My Talent Request" as UC18
+    }
+
+    package "Talent Discovery" {
+        usecase "Browse Talents" as UC20
+        usecase "Search Talents" as UC21
+        usecase "View Talent Profile" as UC22
+    }
+}
+
+Requester --> UC01
+Requester --> UC02
+Requester --> UC03
+Requester --> UC04
+Requester --> UC05
+
+Requester --> UC10
+UC10 ..> UC11 : <<include>>
+UC10 ..> UC12 : <<include>>
+UC10 ..> UC13 : <<include>>
+Requester --> UC14
+Requester --> UC15
+Requester --> UC16
+Requester --> UC17
+Requester --> UC18
+
+Requester --> UC20
+Requester --> UC21
+Requester --> UC22
+
+@enduml

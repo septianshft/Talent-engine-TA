@@ -1,0 +1,102 @@
+erDiagram
+    users {
+        bigint id PK
+        varchar name "NOT NULL"
+        varchar email "UK, NOT NULL"
+        varchar phone_number "NULLABLE"
+        timestamp email_verified_at "NULLABLE"
+        varchar password "NOT NULL"
+        varchar rememberToken "NULLABLE"
+        timestamp created_at "NULLABLE"
+        timestamp updated_at "NULLABLE"
+        varchar domicile_country "NULLABLE"
+        varchar domicile_city "NULLABLE"
+        varchar location "NULLABLE"
+        boolean can_work_remote "DEFAULT false"
+    }
+
+    password_reset_tokens {
+        varchar email PK "NOT NULL, FK to users.email"
+        timestamp created_at "NULLABLE"
+    }
+
+    sessions {
+        integer last_activity "INDEX"
+    }
+
+    cache {
+        varchar key PK "NOT NULL"
+        mediumtext value "NOT NULL"
+        integer expiration "NOT NULL"
+    }
+
+    cache_locks {
+        varchar key PK "NOT NULL"
+        varchar owner "NOT NULL"
+        integer expiration "NOT NULL"
+    }
+
+    competencies {
+        bigint id PK
+        varchar name "UK, NOT NULL"
+        timestamp created_at "NULLABLE"
+        timestamp updated_at "NULLABLE"
+    }
+
+    talent_requests {
+        bigint id PK
+        bigint user_id FK
+        text details "NULLABLE"
+        varchar status "DEFAULT 'pending_admin'"
+        json required_competencies "NULLABLE"
+        varchar work_location_type "DEFAULT 'remote'"
+        varchar work_location_country "NULLABLE"
+        varchar work_location_city "NULLABLE"
+        integer veto_threshold "DEFAULT 80"
+        timestamp created_at "NULLABLE"
+        timestamp updated_at "NULLABLE"
+    }
+
+    competency_user {
+        bigint user_id PK, FK
+        bigint competency_id PK, FK
+        integer proficiency_level "DEFAULT 1"
+    }
+
+    competency_talent_request {
+        bigint competency_id PK, FK
+        bigint talent_request_id PK, FK
+        boolean is_critical "DEFAULT false"
+        timestamp created_at "NULLABLE"
+        timestamp updated_at "NULLABLE"
+    }
+
+    roles {
+        bigint id PK
+        varchar name "UK, NOT NULL"
+        timestamp created_at "NULLABLE"
+        timestamp updated_at "NULLABLE"
+    }
+
+    role_user {
+        bigint user_id PK, FK
+        bigint role_id PK, FK
+    }
+
+    talent_request_assignments {
+        bigint id PK
+        bigint talent_request_id FK
+        bigint user_id FK
+        varchar status "DEFAULT 'pending_assignment_response'"
+    }
+
+    users ||--o{ talent_requests : "creates"
+    users }o--|| password_reset_tokens : "identifies_for_reset"
+    users ||--|{ competency_user : "has_competency"
+    competencies ||--|{ competency_user : "is_competency_of"
+    users ||--|{ role_user : "has_role"
+    roles ||--|{ role_user : "is_role_for"
+    talent_requests ||--|{ competency_talent_request : "requires_competency"
+    competencies ||--|{ competency_talent_request : "is_required_for_request"
+    talent_requests ||--o{ talent_request_assignments : "has_talent_assignment"
+    users ||--o{ talent_request_assignments : "is_assigned_as_talent"

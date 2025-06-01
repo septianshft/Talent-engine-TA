@@ -1,0 +1,63 @@
+@startuml Sistem TalentConnect_ID
+left to right direction
+actor Admin
+
+rectangle "TalentConnect System" {
+
+  package "User Account & Settings" {
+    usecase UC_Admin_Login as "Login / Logout"
+    usecase UC_Admin_ManageProfile as "Manage Own Profile Settings"
+    (UC_Admin_ManageProfile) ..> (Update Profile Information) : <<include>>
+    (UC_Admin_ManageProfile) ..> (Change Password) : <<include>>
+    (UC_Admin_ManageProfile) ..> (Manage Appearance Settings) : <<include>>
+  }
+
+  package "Admin Dashboard" {
+    usecase UC_Admin_ViewDashboard as "View Admin Dashboard"
+  }
+
+  package "Talent Request Management (Admin)" {
+    usecase UC_Admin_ViewAllRequests as "View All Talent Requests"
+    usecase UC_Admin_ViewRequestDetails as "View Talent Request Details"
+    usecase UC_Admin_UpdateRequest as "Update Talent Request\n(e.g., Reject)"
+    usecase UC_Admin_AssignTalents as "Assign Talent(s) to Request"
+    usecase UC_Admin_MarkComplete as "Mark Request as Completed"
+    note right of UC_Admin_ViewRequestDetails : Includes viewing DSS results
+  }
+
+  package "Competency Management (Admin)" {
+    usecase UC_Admin_ListCompetencies as "List Competencies"
+    usecase UC_Admin_CreateCompetency as "Create New Competency"
+    usecase UC_Admin_ViewCompetency as "View Competency Details"
+    usecase UC_Admin_EditCompetency as "Edit Existing Competency"
+    usecase UC_Admin_DeleteCompetency as "Delete Competency"
+
+    (UC_Admin_ListCompetencies) .up.> (UC_Admin_ViewCompetency) : <<extends>>
+    (UC_Admin_ListCompetencies) .up.> (UC_Admin_EditCompetency) : <<extends>>
+    (UC_Admin_ListCompetencies) .up.> (UC_Admin_DeleteCompetency) : <<extends>>
+  }
+}
+
+Admin --> UC_Admin_Login
+Admin --> UC_Admin_ManageProfile
+Admin --> UC_Admin_ViewDashboard
+
+Admin --> UC_Admin_ViewAllRequests
+Admin --> UC_Admin_ViewRequestDetails
+Admin --> UC_Admin_UpdateRequest
+Admin --> UC_Admin_AssignTalents
+Admin --> UC_Admin_MarkComplete
+
+Admin --> UC_Admin_ListCompetencies
+Admin --> UC_Admin_CreateCompetency
+' Admin --> UC_Admin_ViewCompetency (Accessed via List)
+' Admin --> UC_Admin_EditCompetency (Accessed via List)
+' Admin --> UC_Admin_DeleteCompetency (Accessed via List)
+
+@enduml
+
+
+
+// The PlantUML sequence diagram titled "Talent Requesting System Flow" illustrates the chronological interactions between a Requester, the TalentConnect System, an Admin, and a Talent during the lifecycle of a talent request. It begins with the Requester initiating either a standard request, which is routed to an Admin for review, or a direct request to a specific Talent. The diagram then details the Admin's workflow, including viewing pending requests, potentially rejecting them, or assigning talents, which in turn notifies the selected Talent(s).
+
+Following the Admin's actions, the sequence shows the Talent's interaction: viewing their assignments or direct offers and then choosing to accept or reject them. The system processes these responses, updating statuses accordingly and notifying the Admin if further action is needed (e.g., if a direct offer is rejected or all assigned talents reject an admin's assignment, the request may revert to needing admin review). Finally, the diagram depicts the completion phase, where an Admin reviews an approved request and marks it as completed, concluding that particular request's flow within the system. The use of groups and alternative flows clearly delineates these major stages and decision points.
