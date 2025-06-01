@@ -1,0 +1,127 @@
+@startuml RequestingSystemSequence
+!theme vibrant
+
+title Talent Requesting System Flow
+
+actor Requester
+participant System as "TalentConnect System"
+actor Admin
+actor Talent
+
+autonumber "<b>[0]"
+
+group Requester Initiates Request
+    Requester -> System : Submits Talent Request (Standard or Direct)
+    activate System
+    alt Standard Request
+        System -> System : Saves Request (status: 'pending_admin')
+        System --> Requester : Request Submitted for Admin Review
+    else Direct Request to Specific Talent
+        System -> System : Saves Request (status: 'pending_talent_response')
+        System -> System : Creates Assignment (status: 'direct_offer_pending')
+        System --> Requester : Direct Request Sent to Talent
+        System -> Talent : Notifies of Direct Request Offer
+        activate Talent
+        deactivate Talent
+    end
+    deactivate System
+end
+
+group Admin Review & Assignment (for Standard or Escalated Direct)
+    Admin -> System : Views Pending Talent Requests
+    activate System
+    System --> Admin : Displays List of Requests
+    deactivate System
+
+    Admin -> System : Selects a Request (e.g., status 'pending_admin')
+    activate System
+    System --> Admin : Shows Request Details
+    deactivate System
+
+    alt Admin Rejects Request
+        Admin -> System : Rejects Request
+        activate System
+        System -> System : Updates Request Status to 'rejected_by_admin'
+        System --> Admin : Confirmation of Rejection
+        deactivate System
+    else Admin Assigns Talent(s)
+        Admin -> System : Assigns Talent(s) to Request
+        activate System
+        System -> System : Creates/Updates Assignments (status: 'pending_assignment_response')
+        System -> System : Updates Request Status to 'pending_talent_response'
+        System --> Admin : Confirmation of Assignment
+        System -> Talent : Notifies of New Assignment
+        activate Talent
+        deactivate Talent
+        deactivate System
+    end
+end
+
+group Talent Responds to Assignment/Offer
+    Talent -> System : Views Assigned Requests / Direct Offers
+    activate System
+    System --> Talent : Displays Assignments/Offers
+    deactivate System
+
+    Talent -> System : Selects an Assignment/Offer
+    activate System
+    System --> Talent : Shows Assignment/Offer Details
+    deactivate System
+
+    alt Talent Accepts
+        Talent -> System : Accepts Assignment/Offer
+        activate System
+        System -> System : Updates Assignment Status to 'approved_by_talent'
+        System -> System : Checks if all conditions met for Request approval
+        opt Request becomes 'approved'
+            System -> System : Updates Request Status to 'approved'
+            System -> Admin : Notifies Admin of Talent Acceptance / Request Approval
+            activate Admin
+            deactivate Admin
+        end
+        System --> Talent : Confirmation of Acceptance
+        deactivate System
+    else Talent Rejects
+        Talent -> System : Rejects Assignment/Offer
+        activate System
+        System -> System : Updates Assignment Status to 'rejected_by_talent'
+        alt Direct Offer Rejected
+             System -> System : Updates Request Status to 'pending_admin' (for re-evaluation)
+             System -> Admin : Notifies Admin of Talent Rejection (needs review)
+             activate Admin
+             deactivate Admin
+        else Admin Assignment Rejected
+            System -> System : Checks if other assignments pending or if all rejected
+            opt All assigned talents rejected
+                System -> System : Updates Request Status to 'pending_admin' (for re-evaluation)
+                System -> Admin : Notifies Admin (all talents rejected)
+                activate Admin
+                deactivate Admin
+            end
+        end
+        System --> Talent : Confirmation of Rejection
+        deactivate System
+    end
+end
+
+group Request Completion
+    Admin -> System : Views Approved Requests (status: 'approved')
+    activate System
+    System --> Admin : Displays Approved Requests
+    deactivate System
+
+    Admin -> System : Selects an Approved Request to Complete
+    activate System
+    System --> Admin : Shows Request Details
+    deactivate System
+
+    Admin -> System : Marks Request as Completed
+    activate System
+    System -> System : Updates Request Status to 'completed'
+    System --> Admin : Confirmation of Completion
+    deactivate System
+end
+
+@enduml
+
+
