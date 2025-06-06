@@ -7,7 +7,6 @@ use App\Models\TalentRequest;
 use App\Models\User; // Import User model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth; // Although admin, might be useful for logging actions
-use App\Services\EnhancedDecisionSupportService; // Import the Enhanced DSS service
 use Illuminate\Support\Facades\DB; // Import DB facade
 use Illuminate\Support\Facades\Log; // Import Log facade
 use Illuminate\Validation\ValidationException; // Import ValidationException
@@ -65,7 +64,7 @@ class TalentRequestController extends Controller
     /**
      * Display the specified talent request.
      */
-    public function show(TalentRequest $talentRequest, EnhancedDecisionSupportService $enhancedDss)
+    public function show(TalentRequest $talentRequest)
     {
         // Load required relationships
         $talentRequest->load(['requestingUser', 'assignedTalents', 'competencies']); // Ensure pivot data is loaded
@@ -84,36 +83,54 @@ class TalentRequestController extends Controller
                                                                 ->exists();
         }
 
-        $rankedTalents = collect(); // Initialize as empty collection
-        $methodologyExplanation = null;
-        $dssErrorMessage = null; // Initialize error message
+        // Get talents with required competencies for ranking
+        $rankedTalents = collect();
 
-        try {
-            // Get ranked talent suggestions using the Enhanced DSS
-            $rankedTalents = $enhancedDss->findAndRankTalents($talentRequest);
+        if ($talentRequest->competencies->isNotEmpty()) {
+            // Get talents who have all required competencies
+            $requiredCompetencyIds = $talentRequest->competencies->pluck('id');
 
-            // Get methodology explanation for transparency
-            $methodologyExplanation = $enhancedDss->getMethodologyExplanation();
-        } catch (ValidationException $e) {
-            // Handle validation errors (e.g., invalid weight distribution)
-            Log::warning('[Admin Controller] DSS validation error: ' . $e->getMessage());
-            // Set dssErrorMessage instead of redirecting back
-            $dssErrorMessage = 'Invalid competency configuration: ' . $e->getMessage();
-            // $rankedTalents and $methodologyExplanation remain as their initialized empty/null values
-        } catch (\Exception $e) { // Corrected: removed extra backslash before Exception
-            Log::error('[Admin Controller] DSS error: ' . $e->getMessage());
-            // $rankedTalents and $methodologyExplanation remain as their initialized empty/null values
-            $dssErrorMessage = 'An unexpected error occurred with the Decision Support System.'; // Generic error for other exceptions
+            $talents = User::whereHas('roles', function ($query) {
+                    $query->where('name', 'talent');
+                })
+                ->whereHas('competencies', function ($query) use ($requiredCompetencyIds) {
+                    $query->whereIn('competency_id', $requiredCompetencyIds)
+                          ->groupBy('user_id')
+                          ->havingRaw('COUNT(DISTINCT competency_id) = ?', [count($requiredCompetencyIds)]);
+                })
+                ->with(['competencies' => function ($query) use ($requiredCompetencyIds) {
+                    $query->whereIn('competency_id', $requiredCompetencyIds)->withPivot('proficiency_level');
+                }])
+                ->get();
+
+            // Rank talents by simple scoring
+            $rankedTalents = $talents->map(function ($talent) use ($talentRequest) {
+                $totalScore = 0;
+                $competencyCount = 0;
+
+                foreach ($talentRequest->competencies as $requiredCompetency) {
+                    $talentCompetency = $talent->competencies->firstWhere('id', $requiredCompetency->id);
+                    if ($talentCompetency) {
+                        $talentLevel = $talentCompetency->pivot->proficiency_level;
+                        $weight = $requiredCompetency->pivot->weight ?? 1;
+                        $totalScore += $talentLevel * $weight;
+                        $competencyCount++;
+                    }
+                }
+
+                return [
+                    'talent' => $talent,
+                    'total_score' => $competencyCount > 0 ? $totalScore / $competencyCount : 0,
+                ];
+            })->sortByDesc('total_score')->values();
         }
 
-        // Pass both the request and the ranked talents to the view, including the direct offer status and rejection info
+        // Pass the request to the view, including the direct offer status and rejection info
         return view('admin.talent-requests.show', compact(
             'talentRequest',
-            'rankedTalents',
-            'methodologyExplanation',
-            'dssErrorMessage',
             'hasDirectOfferPending',
-            'isPendingAdminAfterDirectOfferRejection' // Add this new variable
+            'isPendingAdminAfterDirectOfferRejection',
+            'rankedTalents'
         ));
     }
 
@@ -186,13 +203,13 @@ class TalentRequestController extends Controller
                 foreach ($talentIdsToAssign as $talentId) {
                     $talentUser = User::find($talentId);
                     if (!$talentUser || !$talentUser->hasRole('talent')) {
-                        Log::warning("[DSS] Attempted to assign non-talent user ID {$talentId} to request ID {$talentRequest->id}. Skipping this user.");
+                        Log::warning("Attempted to assign non-talent user ID {$talentId} to request ID {$talentRequest->id}. Skipping this user.");
                         continue; // Skip this assignment if user is not a talent
                     }
                     // Prepare for sync with the required pivot status and assignment_type
                     $assignmentsToSync[$talentId] = [
                         'status' => 'pending_assignment_response',
-                        'assignment_type' => 'dss_assigned',
+                        'assignment_type' => 'admin_assigned',
                         'assigned_by' => Auth::id()
                     ];
                 }
@@ -240,7 +257,7 @@ class TalentRequestController extends Controller
 
             return redirect()->route('admin.talent-requests.index')->with('success', 'Talents assigned/updated successfully. Requests sent to talents for review.');
         } catch (\Exception $e) {
-            Log::error("[DSS] Error assigning talents to request ID {$talentRequest->id}: " . $e->getMessage());
+            Log::error("Error assigning talents to request ID {$talentRequest->id}: " . $e->getMessage());
             return back()->with('error', 'An error occurred while assigning talents. Please try again.');
         }
     }

@@ -16,8 +16,20 @@ class CompetencyFactory extends Factory
      */
     public function definition(): array
     {
+        $categories = [
+            'Programming Languages',
+            'Frameworks',
+            'Database',
+            'Development',
+            'Soft Skills',
+            'Design',
+            'DevOps'
+        ];
+
         return [
-            'name' => $this->faker->unique()->jobTitle, // Add a name for the competency
+            'name' => $this->faker->unique()->jobTitle,
+            'category' => $this->faker->randomElement($categories),
+            'description' => $this->faker->sentence(),
         ];
     }
 }

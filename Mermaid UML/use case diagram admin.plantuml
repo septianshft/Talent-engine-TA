@@ -22,7 +22,7 @@ rectangle "TalentConnect System" {
     usecase UC_Admin_UpdateRequest as "Update Talent Request\n(e.g., Reject)"
     usecase UC_Admin_AssignTalents as "Assign Talent(s) to Request"
     usecase UC_Admin_MarkComplete as "Mark Request as Completed"
-    note right of UC_Admin_ViewRequestDetails : Includes viewing DSS results
+    note right of UC_Admin_ViewRequestDetails : Includes viewing talent recommendations
   }
 
   package "Competency Management (Admin)" {

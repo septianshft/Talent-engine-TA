@@ -86,24 +86,22 @@ class TalentRequestManagementTest extends TestCase
     }
 
     /** @test */
-    public function admin_can_view_single_talent_request_with_dss_ranking(): void
+    public function admin_can_view_single_talent_request_with_ranking(): void
     {
         // Arrange: Create a talent request requiring competencies the talent has
         $talentRequest = TalentRequest::create([
             'user_id' => $this->requestingUser->id,
-            'details' => 'Test request details for DSS',
+            'details' => 'Test request details for talent ranking',
             'status' => 'pending_admin'
         ]);
         $talentRequest->competencies()->attach([
             $this->competency1->id => [
                 'required_proficiency_level' => 2,
-                'weight' => 4,
-                'is_critical' => false
+                'weight' => 4
             ], // Intermediate PHP
             $this->competency2->id => [
                 'required_proficiency_level' => 3,
-                'weight' => 3,
-                'is_critical' => false
+                'weight' => 3
             ], // Advanced Laravel
         ]);
 
@@ -114,7 +112,7 @@ class TalentRequestManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertViewIs('admin.talent-requests.show');
         $response->assertViewHas('talentRequest', $talentRequest);
-        $response->assertViewHas('rankedTalents'); // Check if the DSS results are passed
+        $response->assertViewHas('rankedTalents'); // Check if the ranking results are passed
 
         // Optionally, assert that the specific talent is in the ranked list
         $rankedTalentsData = $response->viewData('rankedTalents');
@@ -134,7 +132,7 @@ class TalentRequestManagementTest extends TestCase
         // Arrange: Create a talent request with 'pending_admin' status
         $talentRequest = TalentRequest::create([
             'user_id' => $this->requestingUser->id,
-            'details' => 'Test request details for DSS',
+            'details' => 'Test request details for rejection',
             'status' => 'pending_admin'
         ]);
 
@@ -158,7 +156,7 @@ class TalentRequestManagementTest extends TestCase
         // Arrange: Create a talent request with 'pending_admin' status
         $talentRequest = TalentRequest::create([
             'user_id' => $this->requestingUser->id,
-            'details' => 'Test request details for DSS',
+            'details' => 'Test request details for assignment',
             'status' => 'pending_admin'
         ]);
 

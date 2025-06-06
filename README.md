@@ -11,12 +11,12 @@ TalentConnect (internally referred to as Talent-engine-TA) is a web application 
 - **Core Features**: All operational and stable
 - **Critical Bugs**: Zero active issues
 - **Authentication**: Fully functional with role-based access control
-- **DSS System**: Enhanced with weighted competency scoring
+- **System**: Streamlined for improved performance
 
 ### 🔥 Recent Major Fixes
 - **Direct Talent Requests**: Fixed critical controller bug affecting request routing
 - **Test Infrastructure**: Achieved 100% test pass rate with comprehensive coverage
-- **DSS Algorithm**: Enhanced Simple Additive Weighting (SAW) implementation
+- **Talent Management**: Enhanced competency-based matching system
 - **User Experience**: Improved validation and error handling throughout the system
 
 ## Key Features
@@ -31,13 +31,10 @@ TalentConnect (internally referred to as Talent-engine-TA) is a web application 
     *   Define and manage a catalog of professional competencies.
     *   Talents can list their competencies and proficiency levels.
     *   Talent requests specify required competencies, proficiency levels, and relative weights for each competency.
-*   **Enhanced Decision Support System (DSS):**
-    *   **SAW Algorithm**: Mathematically compliant Simple Additive Weighting implementation
+*   **Talent Assignment System:**
     *   **Weighted Scoring**: Users can assign importance weights (0-100%) to each competency
-    *   **Location Intelligence**: Multi-factor geographic compatibility scoring
-    *   **Confidence Metrics**: Reliability indicators for talent recommendations
-    *   **Veto Thresholds**: Automatic elimination of under-qualified candidates
-    *   **Transparent Ranking**: Detailed score breakdowns and methodology explanations
+    *   **Location Intelligence**: Geographic compatibility consideration in talent matching
+    *   **Transparent Ranking**: Clear score display and ranking methodology
 *   **Admin Dashboard:** Centralized interface for administrators to oversee all talent requests, manage users, and monitor system activity.
 *   **User Dashboard:** Personalized dashboards for requesters and talents to track their respective activities.
 
@@ -64,7 +61,7 @@ TalentConnect (internally referred to as Talent-engine-TA) is a web application 
 
 ## Project Structure Highlights
 
-*   `app/`: Contains core application logic (Models, Controllers, Services like `DecisionSupportService`, Livewire components).
+*   `app/`: Contains core application logic (Models, Controllers, Services, Livewire components).
 *   `config/`: Application configuration files.
 *   `database/`: Migrations, factories, and seeders.
 *   `public/`: Web server's document root, entry point (`index.php`), and static assets (images, CSS, JS).
@@ -133,7 +130,6 @@ php artisan test --filter="UserTalentRequestTest"
 
 ### Documentation
 
-- **📊 [Enhanced DSS Documentation](docs/Enhanced_DSS_Documentation.md)**: Comprehensive guide to the Decision Support System
 - **🏗️ [UML Diagrams](uml-diagrams/)**: Complete system architecture visualization with PlantUML diagrams
 - **📝 [Integration Notes](integration_notes.md)**: Development history and feature implementation details
 - **🔄 [Changelog](CHANGELOG.md)**: Detailed version history and improvements
@@ -146,7 +142,7 @@ The system includes comprehensive UML documentation in the `uml-diagrams/` folde
 - **🏗️ Class Diagram**: Models, services, controllers, and relationships
 - **🔄 Sequence Diagram**: Workflow interactions and data flow
 - **👤 Use Case Diagram**: Actor interactions and system functionality  
-- **⚙️ Activity Diagram**: Enhanced DSS algorithm workflow
+- **⚙️ Activity Diagram**: Talent assignment workflow
 - **📊 State Diagram**: Talent request lifecycle management
 
 View diagrams online: Open `uml-diagrams/index.html` in your browser or use the [PlantUML Online Editor](http://www.plantuml.com/plantuml/uml/)

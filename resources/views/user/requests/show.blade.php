@@ -4,26 +4,26 @@
         <div>
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
                 <svg class="w-8 h-8 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                Talent Request Details
+                Detail Permintaan Talent
             </h1>
         </div>
         <a href="{{ route('user.requests.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            Back to My Requests
+            Kembali ke Permintaan Saya
         </a>
     </div>
 
     <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden ring-1 ring-gray-200 dark:ring-gray-700">
         <div class="px-6 py-5 sm:px-8 sm:py-6 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Request Information</h2>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Informasi Permintaan</h2>
         </div>
         <div class="px-6 py-5 sm:px-8 sm:py-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             <div>
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Request ID</dt>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">ID Permintaan</dt>
                 <dd class="mt-1 text-lg text-gray-900 dark:text-white">#{{ $talentRequest->id }}</dd>
             </div>
             <div>
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Overall Status</dt>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status Keseluruhan</dt>
                 <dd class="mt-1 text-lg">
                     <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full
                         @switch($talentRequest->status)
@@ -38,51 +38,70 @@
                             @default bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
                         @endswitch
                     ">
-                        {{ Str::title(str_replace('_', ' ', $talentRequest->status)) }}
+                        @switch($talentRequest->status)
+                            @case('pending_admin') Menunggu Admin @break
+                            @case('pending_talent') Menunggu Talent @break
+                            @case('approved') Disetujui @break
+                            @case('rejected_admin') Ditolak Admin @break
+                            @case('rejected_talent') Ditolak Talent @break
+                            @case('rejected_by_one_or_more_talents') Ditolak oleh Satu atau Lebih Talent @break
+                            @case('completed') Selesai @break
+                            @default {{ Str::title(str_replace('_', ' ', $talentRequest->status)) }}
+                        @endswitch
                     </span>
                 </dd>
             </div>
             <div>
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Requested On</dt>
-                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->created_at->format('M d, Y H:i') }}</dd>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Diminta Pada</dt>
+                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->created_at->format('d M Y H:i') }}</dd>
             </div>
             <div class="md:col-span-2">
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Request Details</dt>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Detail Permintaan</dt>
                 <dd class="mt-1 text-lg text-gray-900 dark:text-white whitespace-pre-wrap">{{ $talentRequest->details }}</dd>
             </div>
 
             <div>
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Work Location Type</dt>
-                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ Str::title(str_replace('_', ' ', $talentRequest->work_location_type)) }}</dd>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Jenis Lokasi Kerja</dt>
+                <dd class="mt-1 text-lg text-gray-900 dark:text-white">
+                    @if($talentRequest->work_location_type === 'remote')
+                        Jarak Jauh
+                    @elseif($talentRequest->work_location_type === 'on_site')
+                        Di Tempat
+                    @elseif($talentRequest->work_location_type === 'hybrid')
+                        Hibrida
+                    @else
+                        {{ Str::title(str_replace('_', ' ', $talentRequest->work_location_type)) }}
+                    @endif
+                </dd>
             </div>
 
             @if ($talentRequest->work_location_type !== 'remote')
             <div>
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Work Location City</dt>
-                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->work_location_city ?? 'N/A' }}</dd>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Kota Lokasi Kerja</dt>
+                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->work_location_city ?? 'T/A' }}</dd>
             </div>
             <div>
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Work Location Country</dt>
-                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->work_location_country ?? 'N/A' }}</dd>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Negara Lokasi Kerja</dt>
+                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->work_location_country ?? 'T/A' }}</dd>
             </div>
             @endif
 
             <div>
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Requester Domicile City</dt>
-                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->user->domicile_city ?? 'N/A' }}</dd>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Kota Domisili Peminta</dt>
+                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->user->domicile_city ?? 'T/A' }}</dd>
             </div>
             <div>
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Requester Domicile Country</dt>
-                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->user->domicile_country ?? 'N/A' }}</dd>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Negara Domisili Peminta</dt>
+                <dd class="mt-1 text-lg text-gray-900 dark:text-white">{{ $talentRequest->user->domicile_country ?? 'T/A' }}</dd>
             </div>
 
             @if ($talentRequest->competencies && $talentRequest->competencies->count() > 0)
             <div class="md:col-span-2">
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Requested Competencies</dt>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Kompetensi yang Diminta</dt>
                 <dd class="mt-1 text-gray-900 dark:text-white">
                     <ul class="list-disc list-inside space-y-1">
                         @foreach ($talentRequest->competencies as $competency)
-                            <li class="text-lg">{{ $competency->name }} (Level: {{ $competency->pivot->required_proficiency_level }}, Weight: {{ $competency->pivot->weight }})</li>
+                            <li class="text-lg">{{ $competency->name }} (Level: {{ $competency->pivot->required_proficiency_level }}, Bobot: {{ $competency->pivot->weight }})</li>
                         @endforeach
                     </ul>
                 </dd>
@@ -90,30 +109,11 @@
             @endif
         </div>
 
-        {{-- Enhanced DSS Results Section --}}
-        @if(in_array($talentRequest->status, ['pending_talent', 'assigned', 'completed']))
-        <div class="px-6 py-4 sm:px-8 bg-orange-50 dark:bg-orange-900/20 border-t border-orange-200 dark:border-orange-800">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-lg font-medium text-orange-900 dark:text-orange-100">Enhanced DSS Analysis</h3>
-                    <p class="mt-1 text-sm text-orange-700 dark:text-orange-300">
-                        View detailed talent ranking analysis with Enhanced Decision Support System featuring critical competency evaluation and SAW methodology comparison.
-                    </p>
-                </div>
-                <a href="{{ route('user.requests.enhanced-results', $talentRequest) }}"
-                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 012-2h2a2 2 0 012 2v6.5"></path>
-                    </svg>
-                    View Enhanced Results
-                </a>
-            </div>
-        </div>
-        @endif
+
 
         @if ($talentRequest->assignedTalents && $talentRequest->assignedTalents->count() > 0)
             <div class="px-6 py-5 sm:px-8 sm:py-6 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Assigned Talents & Statuses</h3>
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Talent yang Ditugaskan & Status</h3>
                 <div class="space-y-4">
                     @foreach ($talentRequest->assignedTalents as $talent)
                         <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow ring-1 ring-gray-200 dark:ring-gray-700/50">
@@ -127,12 +127,17 @@
                                         @default bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
                                     @endswitch
                                 ">
-                                    {{ Str::title(str_replace('_', ' ', $talent->pivot->status)) }}
+                                    @switch($talent->pivot->status)
+                                        @case('pending_assignment_response') Menunggu Respon Penugasan @break
+                                        @case('approved_by_talent') Disetujui oleh Talent @break
+                                        @case('rejected_by_talent') Ditolak oleh Talent @break
+                                        @default {{ Str::title(str_replace('_', ' ', $talent->pivot->status)) }}
+                                    @endswitch
                                 </span>
                             </div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Assigned: {{ $talent->pivot->created_at ? $talent->pivot->created_at->format('M d, Y H:i') : 'N/A' }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ditugaskan: {{ $talent->pivot->created_at ? $talent->pivot->created_at->format('d M Y H:i') : 'T/A' }}</p>
                             @if ($talent->pivot->status === 'approved_by_talent' && $talent->phone_number)
-                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Contact: {{ $talent->phone_number }}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Kontak: {{ $talent->phone_number }}</p>
                             @endif
                         </div>
                     @endforeach
@@ -140,11 +145,11 @@
             </div>
         @else
             <div class="px-6 py-5 sm:px-8 sm:py-6 text-center text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
-                <p>No talents have been assigned to this request yet.</p>
+                <p>Belum ada talent yang ditugaskan untuk permintaan ini.</p>
             </div>
         @endif
 
-        {{-- Add any user-specific actions here, e.g., confirming completion if applicable --}}
+        {{-- Tambahkan tindakan spesifik pengguna di sini, mis., mengonfirmasi penyelesaian jika berlaku --}}
 
     </div>
 </div>

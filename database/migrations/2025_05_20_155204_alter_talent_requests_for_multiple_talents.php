@@ -37,7 +37,7 @@ return new class extends Migration
             $table->foreignId('talent_request_id')->constrained('talent_requests')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete(); // This refers to the users table (talents are users)
             $table->string('status')->default('pending_assignment_response');
-            $table->string('assignment_type'); // Added: e.g., 'direct_offer', 'dss_assigned'
+            $table->string('assignment_type'); // Added: e.g., 'direct_offer', 'admin_assigned'
             $table->foreignId('assigned_by')->nullable()->constrained('users')->onDelete('set null'); // Added: User who made the offer/assignment
             $table->timestamps();
             $table->unique(['talent_request_id', 'user_id'], 'talent_request_user_unique');

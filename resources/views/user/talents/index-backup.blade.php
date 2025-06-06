@@ -296,13 +296,233 @@
     <!-- Talents Display -->
     @if($talents->count() > 0)
         <!-- Grid View -->
-        <div id="talents-grid" class="mb-12">
-            @include('user.talents.partials.talent-grid', ['talents' => $talents, 'shortlistCount' => $shortlistCount])
+        <div id="talents-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+            @foreach($talents as $talent)
+                <div class="talent-card group bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 transform hover:-translate-y-1"
+                     data-talent-id="{{ $talent->id }}">
+
+                    <!-- Selection Checkbox -->
+                    <div class="absolute top-4 left-4 z-10">
+                        <input type="checkbox" class="talent-select w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                               value="{{ $talent->id }}" onchange="updateCompareButton()">
+                    </div>
+
+                    <!-- Shortlist Button -->
+                    <div class="absolute top-4 right-4 z-10">
+                        <button onclick="toggleShortlist({{ $talent->id }}, this)"
+                                class="shortlist-btn p-2 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-md hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                                data-shortlisted="false">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Card Content -->
+                    <div class="p-6 flex flex-col h-full">
+                        <!-- Talent Header -->
+                        <div class="flex items-center mb-6 mt-4">
+                            <div class="relative">
+                                @if($talent->profile_picture && Storage::exists('public/' . $talent->profile_picture))
+                                    <img src="{{ Storage::url($talent->profile_picture) }}" alt="{{ $talent->name }}"
+                                         class="w-16 h-16 rounded-full object-cover shadow-lg ring-2 ring-blue-100 dark:ring-blue-900/50">
+                                @else
+                                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-full flex items-center justify-center shadow-lg ring-2 ring-blue-200 dark:ring-blue-800 group-hover:scale-110 transition-transform duration-200">
+                                        <span class="text-white font-bold text-lg tracking-wide drop-shadow-sm">
+                                            {{ strtoupper(substr($talent->name, 0, 1)) }}{{ strtoupper(substr(explode(' ', $talent->name)[1] ?? '', 0, 1)) }}
+                                        </span>
+                                    </div>
+                                @endif
+                                <!-- Rating/Performance Indicator -->
+                                <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-green-400 to-green-500 border-2 border-white dark:border-gray-800 rounded-full shadow-sm flex items-center justify-center">
+                                    <span class="text-white text-xs font-bold">{{ $talent->competencies->count() }}</span>
+                                </div>
+                            </div>
+                            <div class="ml-4 min-w-0 flex-1">
+                                <h3 class="font-bold text-lg text-gray-900 dark:text-white truncate mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                    {{ $talent->name }}
+                                </h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ $talent->email }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Performance Metrics -->
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl text-center">
+                                <div class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ $talent->competencies->count() }}</div>
+                                <div class="text-xs text-blue-500 dark:text-blue-300">Skills</div>
+                            </div>
+                            <div class="bg-green-50 dark:bg-green-900/20 p-3 rounded-xl text-center">
+                                <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                                    {{ number_format($talent->competencies->avg('pivot.proficiency_level') ?? 0, 1) }}
+                                </div>
+                                <div class="text-xs text-green-500 dark:text-green-300">Avg Level</div>
+                            </div>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="flex items-center text-gray-600 dark:text-gray-400 mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                            <svg class="w-4 h-4 mr-2 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span class="text-sm truncate font-medium">
+                                {{ $talent->domicile_city ?? 'Unknown' }}, {{ $talent->domicile_country ?? 'Unknown' }}
+                            </span>
+                        </div>
+
+                        <!-- Top Competencies -->
+                        <div class="mb-6 flex-grow">
+                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                                Top Skills
+                            </h4>
+                            @if($talent->competencies && $talent->competencies->count() > 0)
+                                <div class="space-y-2">
+                                    @foreach($talent->competencies->take(3) as $competency)
+                                        @php
+                                            $proficiencyLevel = $competency->pivot->proficiency_level ?? 2;
+                                            $proficiencyText = ['', 'Beginner', 'Intermediate', 'Advanced', 'Expert'][$proficiencyLevel] ?? 'Intermediate';
+                                            $proficiencyColors = [
+                                                1 => 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300',
+                                                2 => 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300',
+                                                3 => 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300',
+                                                4 => 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300'
+                                            ];
+                                            $colorClass = $proficiencyColors[$proficiencyLevel] ?? $proficiencyColors[2];
+                                        @endphp
+                                        <div class="flex justify-between items-center p-2 bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600">
+                                            <span class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $competency->name }}</span>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border {{ $colorClass }} ml-2">
+                                                {{ $proficiencyText }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                    @if($talent->competencies->count() > 3)
+                                        <div class="text-center">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                                                +{{ $talent->competencies->count() - 3 }} more
+                                            </span>
+                                        </div>
+                                    @endif
+                                </div>
+                            @else
+                                <p class="text-sm text-gray-500 dark:text-gray-400 italic">No skills listed</p>
+                            @endif
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex gap-2">
+                                <a href="{{ route('user.talents.show', $talent->id) }}"
+                                   class="flex-1 inline-flex justify-center items-center px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm hover:shadow-md">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    View
+                                </a>
+                                <button onclick="sendRequest({{ $talent->id }})"
+                                        class="flex-1 inline-flex justify-center items-center px-3 py-2 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-lg border-2 border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-600 transition-all duration-200">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                    </svg>
+                                    Request
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
         </div>
 
         <!-- List View (Hidden by default) -->
-        <div id="talents-list" class="mb-12 hidden">
-            @include('user.talents.partials.talent-list', ['talents' => $talents, 'shortlistCount' => $shortlistCount])
+        <div id="talents-list" class="hidden space-y-4 mb-12">
+            @foreach($talents as $talent)
+                <div class="talent-card bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+                     data-talent-id="{{ $talent->id }}">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <!-- Selection -->
+                                <input type="checkbox" class="talent-select w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+                                       value="{{ $talent->id }}" onchange="updateCompareButton()">
+
+                                <!-- Avatar -->
+                                <div class="relative">
+                                    @if($talent->profile_picture && Storage::exists('public/' . $talent->profile_picture))
+                                        <img src="{{ Storage::url($talent->profile_picture) }}" alt="{{ $talent->name }}"
+                                             class="w-12 h-12 rounded-full object-cover">
+                                    @else
+                                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                                            <span class="text-white font-medium text-sm">
+                                                {{ strtoupper(substr($talent->name, 0, 1)) }}{{ strtoupper(substr(explode(' ', $talent->name)[1] ?? '', 0, 1)) }}
+                                            </span>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <!-- Basic Info -->
+                                <div>
+                                    <h3 class="font-semibold text-gray-900 dark:text-white">{{ $talent->name }}</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ $talent->email }}</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $talent->domicile_city ?? 'Unknown' }}, {{ $talent->domicile_country ?? 'Unknown' }}
+                                    </p>
+                                </div>
+
+                                <!-- Skills Preview -->
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($talent->competencies->take(3) as $competency)
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                            {{ $competency->name }}
+                                        </span>
+                                    @endforeach
+                                    @if($talent->competencies->count() > 3)
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                                            +{{ $talent->competencies->count() - 3 }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex items-center space-x-3">
+                                <!-- Stats -->
+                                <div class="text-center">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $talent->competencies->count() }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Skills</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ number_format($talent->competencies->avg('pivot.proficiency_level') ?? 0, 1) }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Avg Level</div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <button onclick="toggleShortlist({{ $talent->id }}, this)"
+                                        class="shortlist-btn p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        data-shortlisted="false">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                    </svg>
+                                </button>
+                                <a href="{{ route('user.talents.show', $talent->id) }}"
+                                   class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                    View Profile
+                                </a>
+                                <button onclick="sendRequest({{ $talent->id }})"
+                                        class="px-4 py-2 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-lg border border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-600 transition-colors">
+                                    Request
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
         </div>
 
         <!-- Pagination -->

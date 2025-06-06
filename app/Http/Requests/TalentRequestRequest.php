@@ -28,8 +28,6 @@ class TalentRequestRequest extends FormRequest
             'competencies.*.id' => 'required|integer|exists:competencies,id',
             'competencies.*.level' => 'required|integer|between:1,4', // Assuming proficiency level is 1-4
             'competencies.*.weight' => 'required|integer|min:0|max:100', // Updated weight validation
-            'competencies.*.is_critical' => 'boolean', // New critical competency field
-            'veto_threshold' => 'nullable|integer|min:60|max:100', // New veto threshold field
             'talent_id' => 'nullable|integer|exists:users,id', // For direct requests
         ];
     }
@@ -58,11 +56,6 @@ class TalentRequestRequest extends FormRequest
             'competencies.*.weight.min' => 'Weight must be at least 0%.',
             'competencies.*.weight.max' => 'Weight must not exceed 100%.',
             'competencies.*.weight.integer' => 'Weight must be a whole number (0-100).',
-            'competencies.*.is_critical.boolean' => 'Critical competency must be true or false.',
-
-            'veto_threshold.integer' => 'Veto threshold must be a whole number.',
-            'veto_threshold.min' => 'Veto threshold must be at least 60%.',
-            'veto_threshold.max' => 'Veto threshold cannot exceed 100%.',
 
             'talent_id.exists' => 'Selected talent does not exist.',
         ];
@@ -100,7 +93,6 @@ class TalentRequestRequest extends FormRequest
             $this->validateCompetencies($validator);
             $this->validateWeightDistribution($validator);
             $this->validateLocationRequirements($validator);
-            $this->validateCriticalCompetencies($validator);
         });
     }
 
@@ -138,8 +130,7 @@ class TalentRequestRequest extends FormRequest
     }
 
     /**
-     * Validate weight distribution for thesis compliance
-     * Updated to align with Enhanced DSS academic compliance logic
+     * Validate weight distribution for academic compliance
      */
     protected function validateWeightDistribution($validator)
     {
@@ -207,51 +198,5 @@ class TalentRequestRequest extends FormRequest
         }
     }
 
-    /**
-     * Validate critical competency specifications
-     */
-    protected function validateCriticalCompetencies($validator)
-    {
-        $competencies = $this->input('competencies', []);
-        $criticalCount = 0;
 
-        foreach ($competencies as $index => $competency) {
-            if (!empty($competency['is_critical'])) {
-                $criticalCount++;
-
-                // Critical competencies should have reasonable required levels
-                if (isset($competency['level']) && $competency['level'] < 2) {
-                    $validator->errors()->add(
-                        "competencies.{$index}.level",
-                        'Critical competencies should require at least level 2 proficiency for meaningful evaluation.'
-                    );
-                }
-
-                // Critical competencies should have reasonable weights
-                if (isset($competency['weight']) && $competency['weight'] < 10) {
-                    $validator->errors()->add(
-                        "competencies.{$index}.weight",
-                        'Critical competencies should have at least 10% weight to be meaningful.'
-                    );
-                }
-            }
-        }
-
-        // Limit number of critical competencies (max 70% of total competencies)
-        if ($criticalCount > count($competencies) * 0.7) {
-            $validator->errors()->add(
-                'competencies',
-                'Too many critical competencies. Maximum 70% of competencies should be marked as critical for balanced evaluation.'
-            );
-        }
-
-        // Validate veto threshold logic
-        $vetoThreshold = $this->input('veto_threshold', 80);
-        if ($criticalCount > 0 && $vetoThreshold < 70) {
-            $validator->errors()->add(
-                'veto_threshold',
-                'Veto threshold should be at least 70% when using critical competencies to ensure meaningful filtering.'
-            );
-        }
-    }
 }

@@ -24,8 +24,8 @@ class Competency extends Model
      */
     protected $fillable = [
         'name',
+        'category',
         'description',
-        // Add other fillable attributes if any
     ];
 
     /**

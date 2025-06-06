@@ -32,7 +32,6 @@ class TalentRequest extends Model
         'work_location_type',
         'work_location_country',
         'work_location_city',
-        'veto_threshold', // Add veto threshold field
     ];
 
     protected $casts = [
@@ -64,6 +63,6 @@ class TalentRequest extends Model
     {
         return $this->belongsToMany(Competency::class, 'competency_talent_request')
                     ->using(CompetencyTalentRequest::class) // Use the custom pivot model
-                    ->withPivot('required_proficiency_level', 'weight', 'is_critical');
+                    ->withPivot('required_proficiency_level', 'weight');
     }
 }

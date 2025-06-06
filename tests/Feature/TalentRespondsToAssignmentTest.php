@@ -59,7 +59,7 @@ class TalentRespondsToAssignmentTest extends TestCase
         Log::info('SETUP: Attaching talent ID: ' . $this->talent->id . ' (Role: ' . ($this->talent->roles->first()->name ?? 'N/A') . ') to TalentRequest ID: ' . $this->talentRequest->id . ' (Requester ID: ' . $this->talentRequest->user_id . ')');
         $this->talentRequest->assignedTalents()->attach($this->talent->id, [
             'status' => 'pending_assignment_response',
-            'assignment_type' => 'dss_assigned', // Add required assignment_type field
+            'assignment_type' => 'admin_assigned', // Updated from dss_assigned
             // created_at and updated_at are handled by withTimestamps() on the relationship
         ]);
 

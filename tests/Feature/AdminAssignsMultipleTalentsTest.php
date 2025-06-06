@@ -25,7 +25,7 @@ class AdminAssignsMultipleTalentsTest extends TestCase
         // Seed competencies if your TalentRequestFactory depends on them
         // Or if you need to attach them for the request to be valid
         // We should also seed some competencies as TalentRequestFactory might attach them
-        // and the DecisionSupportService in Admin\TalentRequestController->show might need them.
+        // and the talent assignment system in Admin\TalentRequestController->show might need them.
         $this->artisan('db:seed', ['--class' => 'CompetencySeeder']);
 
         $this->admin = User::factory()->create();
@@ -69,13 +69,13 @@ class AdminAssignsMultipleTalentsTest extends TestCase
             'talent_request_id' => $this->talentRequest->id,
             'user_id' => $this->talent1->id,
             'status' => 'pending_assignment_response',
-            'assignment_type' => 'dss_assigned'
+            'assignment_type' => 'admin_assigned'
         ]);
         $this->assertDatabaseHas('talent_request_assignments', [
             'talent_request_id' => $this->talentRequest->id,
             'user_id' => $this->talent2->id,
             'status' => 'pending_assignment_response',
-            'assignment_type' => 'dss_assigned'
+            'assignment_type' => 'admin_assigned'
         ]);
     }
 }

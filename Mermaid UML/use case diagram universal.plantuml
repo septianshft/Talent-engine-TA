@@ -24,7 +24,7 @@ rectangle "Sistem TalentConnect" {
         usecase UC_Pemohon_BuatPermintaanLangsung as "Buat Permintaan Talenta Langsung"
         usecase UC_Pemohon_LihatPermintaanSaya as "Lihat Permintaan Talenta Saya"
         usecase UC_Pemohon_LihatDetailPermintaanSaya as "Lihat Detail Permintaan Saya"
-        usecase UC_Pemohon_LihatHasilDSS as "Lihat Hasil DSS yang Ditingkatkan"
+        usecase UC_Pemohon_LihatHasilTingkat as "Lihat Hasil Penilaian yang Ditingkatkan"
         usecase UC_Pemohon_HapusPermintaan as "Hapus Permintaan Talenta Saya"
         usecase UC_Pemohon_JelajahiTalenta as "Jelajahi Talenta"
         usecase UC_Pemohon_CariTalenta as "Cari Talenta"
@@ -43,7 +43,7 @@ rectangle "Sistem TalentConnect" {
         usecase UC_Admin_Dasbor as "Lihat Dasbor Admin"
         usecase UC_Admin_LihatSemuaPermintaan as "Lihat Semua Permintaan Talenta"
         usecase UC_Admin_LihatDetailPermintaanApapun as "Lihat Detail Permintaan Apapun"
-        (UC_Admin_LihatDetailPermintaanApapun) ..> (Lihat Hasil DSS yang Ditingkatkan) : <<sertakan>>
+        (UC_Admin_LihatDetailPermintaanApapun) ..> (Lihat Hasil Penilaian yang Ditingkatkan) : <<sertakan>>
         usecase UC_Admin_PerbaruiStatusPermintaan as "Perbarui Status Permintaan\n(misalnya, Tolak)"
         usecase UC_Admin_TugaskanTalenta as "Tugaskan Talenta ke Permintaan"
         usecase UC_Admin_TandaiSelesai as "Tandai Permintaan sebagai Selesai"
@@ -66,7 +66,7 @@ Pemohon --> UC_Pemohon_BuatPermintaanStandar
 Pemohon --> UC_Pemohon_BuatPermintaanLangsung
 Pemohon --> UC_Pemohon_LihatPermintaanSaya
 Pemohon --> UC_Pemohon_LihatDetailPermintaanSaya
-Pemohon --> UC_Pemohon_LihatHasilDSS
+Pemohon --> UC_Pemohon_LihatHasilTingkat
 Pemohon --> UC_Pemohon_HapusPermintaan
 Pemohon --> UC_Pemohon_JelajahiTalenta
 Pemohon --> UC_Pemohon_CariTalenta

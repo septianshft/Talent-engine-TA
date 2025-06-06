@@ -20,7 +20,7 @@
                     <svg class="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
-                    Back to Talent Discovery
+                    Kembali ke Penemuan Talent
                 </a>
             </div>
 
@@ -69,7 +69,7 @@
                                     <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                                     </svg>
-                                    <span class="font-medium text-sm sm:text-base">{{ $talent->competencies->count() }} {{ Str::plural('Skill', $talent->competencies->count()) }}</span>
+                                    <span class="font-medium text-sm sm:text-base">{{ $talent->competencies->count() }} {{ Str::plural('Keahlian', $talent->competencies->count()) }}</span>
                                 </div>
                             @endif
                         </div>
@@ -84,7 +84,7 @@
                             <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                             </svg>
-                            Send Request
+                            Kirim Permintaan
                             <svg class="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                             </svg>
@@ -106,14 +106,14 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                     </svg>
                                 </div>
-                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Contact Information</h2>
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Informasi Kontak</h2>
                             </div>
 
                             <div class="bg-gradient-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 rounded-[2rem] p-6 sm:p-8 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-shadow duration-300">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                                     <div class="space-y-2">
                                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                            Full Name
+                                            Nama Lengkap
                                         </label>
                                         <p class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
                                             {{ $talent->name }}
@@ -122,7 +122,7 @@
 
                                     <div class="space-y-2">
                                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                            Email Address
+                                            Alamat Email
                                         </label>
                                         <div class="flex items-center space-x-3">
                                             <p class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white break-all">
@@ -140,7 +140,7 @@
                                     @if($talent->phone)
                                         <div class="space-y-2">
                                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                                Phone Number
+                                                Nomor Telepon
                                             </label>
                                             <div class="flex items-center space-x-3">
                                                 <p class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
@@ -159,7 +159,7 @@
                                     @if($talent->domicile_country || $talent->domicile_city)
                                         <div class="space-y-2">
                                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                                Location
+                                                Lokasi
                                             </label>
                                             <p class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                                                 <svg class="w-5 h-5 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,9 +185,9 @@
                                             </svg>
                                         </div>
                                         <div>
-                                            <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Skills & Competencies</h2>
+                                            <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Keahlian & Kompetensi</h2>
                                             <span class="inline-block mt-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-xs sm:text-sm font-semibold rounded-[1rem]">
-                                                {{ $talent->competencies->count() }} {{ Str::plural('Skill', $talent->competencies->count()) }}
+                                                {{ $talent->competencies->count() }} {{ Str::plural('Keahlian', $talent->competencies->count()) }}
                                             </span>
                                         </div>
                                     </div>
@@ -199,7 +199,7 @@
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                                             </svg>
-                                            Grid View
+                                            Tampilan Grid
                                         </button>
                                     </div>
                                 </div>
@@ -219,7 +219,7 @@
                                                             {{ Str::limit($competency->description, 100) }}
                                                             @if(strlen($competency->description) > 100)
                                                                 <button onclick="toggleDescription(this)" class="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium ml-1">
-                                                                    Read more
+                                                                    Baca selengkapnya
                                                                 </button>
                                                                 <span class="hidden full-description">{{ $competency->description }}</span>
                                                             @endif
@@ -234,8 +234,8 @@
                                                             @elseif($competency->pivot->proficiency_level == 3) bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
                                                             @elseif($competency->pivot->proficiency_level == 4) bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300
                                                             @endif"
-                                                            title="Proficiency Level: {{ ['', 'Beginner - Basic understanding', 'Intermediate - Comfortable working', 'Advanced - Highly skilled', 'Expert - Industry leading expertise'][$competency->pivot->proficiency_level] }}">
-                                                            {{ ['', 'Beginner', 'Intermediate', 'Advanced', 'Expert'][$competency->pivot->proficiency_level] }}
+                                                            title="Tingkat Keahlian: {{ ['', 'Pemula - Pemahaman dasar', 'Menengah - Nyaman bekerja', 'Mahir - Sangat terampil', 'Ahli - Keahlian terdepan di industri'][$competency->pivot->proficiency_level] }}">
+                                                            {{ ['', 'Pemula', 'Menengah', 'Mahir', 'Ahli'][$competency->pivot->proficiency_level] }}
                                                         </span>
                                                     </div>
                                                 @endif
@@ -244,7 +244,7 @@
                                             @if($competency->pivot->proficiency_level)
                                                 <!-- Enhanced Proficiency Level Indicator -->
                                                 <div class="flex items-center space-x-3 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 dark:border-gray-600">
-                                                    <span class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 flex-shrink-0">Proficiency:</span>
+                                                    <span class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 flex-shrink-0">Keahlian:</span>
                                                     <div class="flex items-center space-x-1">
                                                         @for($i = 1; $i <= 4; $i++)
                                                             <div class="relative">
@@ -287,12 +287,12 @@
                     <!-- Quick Stats -->
                     <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 sm:p-6">
                         <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                            Quick Stats
+                            Statistik Cepat
                         </h3>
 
                         <div class="space-y-3 sm:space-y-4">
                             <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Total Skills</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Total Keahlian</span>
                                 <span class="font-semibold text-gray-900 dark:text-white">
                                     {{ $talent->competencies->count() }}
                                 </span>
@@ -300,28 +300,28 @@
 
                             @if($talent->competencies->count() > 0)
                                 <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600 dark:text-gray-400">Expert Level</span>
+                                    <span class="text-sm text-gray-600 dark:text-gray-400">Tingkat Ahli</span>
                                     <span class="font-semibold text-gray-900 dark:text-white">
                                         {{ $talent->competencies->where('pivot.proficiency_level', 4)->count() }}
                                     </span>
                                 </div>
 
                                 <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600 dark:text-gray-400">Advanced Level</span>
+                                    <span class="text-sm text-gray-600 dark:text-gray-400">Tingkat Mahir</span>
                                     <span class="font-semibold text-gray-900 dark:text-white">
                                         {{ $talent->competencies->where('pivot.proficiency_level', 3)->count() }}
                                     </span>
                                 </div>
 
                                 <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600 dark:text-gray-400">Intermediate Level</span>
+                                    <span class="text-sm text-gray-600 dark:text-gray-400">Tingkat Menengah</span>
                                     <span class="font-semibold text-gray-900 dark:text-white">
                                         {{ $talent->competencies->where('pivot.proficiency_level', 2)->count() }}
                                     </span>
                                 </div>
 
                                 <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600 dark:text-gray-400">Beginner Level</span>
+                                    <span class="text-sm text-gray-600 dark:text-gray-400">Tingkat Pemula</span>
                                     <span class="font-semibold text-gray-900 dark:text-white">
                                         {{ $talent->competencies->where('pivot.proficiency_level', 1)->count() }}
                                     </span>
@@ -329,7 +329,7 @@
                             @endif
 
                             <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Member Since</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Anggota Sejak</span>
                                 <span class="font-semibold text-gray-900 dark:text-white">
                                     {{ $talent->created_at->format('M Y') }}
                                 </span>
@@ -340,24 +340,24 @@
                     <!-- Action Card -->
                     <div class="bg-white dark:bg-gray-700 rounded-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-600">
                         <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                            Interested in this talent?
+                            Tertarik dengan talenta ini?
                         </h3>
                         <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 sm:mb-6">
-                            Send a request to connect with {{ $talent->name }} for your project needs.
+                            Kirim permintaan untuk terhubung dengan {{ $talent->name }} untuk kebutuhan proyek Anda.
                         </p>
                         <a href="{{ route('user.requests.create-direct', $talent) }}"
                            class="w-full inline-flex justify-center items-center px-4 py-3 text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 rounded-lg font-medium transition-all duration-300 ease-in-out">
                             <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
-                            <span class="text-sm sm:text-base">Send Request</span>
+                            <span class="text-sm sm:text-base">Kirim Permintaan</span>
                         </a>
                     </div>
 
                     <!-- Contact Card -->
                     <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl p-4 sm:p-6">
                         <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                            Contact Options
+                            Opsi Kontak
                         </h3>
                         <div class="space-y-2 sm:space-y-3">
                             <a href="mailto:{{ $talent->email }}"
@@ -365,7 +365,7 @@
                                 <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                 </svg>
-                                <span class="text-sm">Send Email</span>
+                                <span class="text-sm">Kirim Email</span>
                             </a>
 
                             @if($talent->phone)
@@ -374,7 +374,7 @@
                                     <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                                     </svg>
-                                    <span class="text-sm">Call Now</span>
+                                    <span class="text-sm">Telepon Sekarang</span>
                                 </a>
                             @endif
                         </div>
@@ -399,15 +399,15 @@
     function shareProfile() {
         if (navigator.share) {
             navigator.share({
-                title: 'Check out {{ $talent->name }} on TalentConnect',
-                text: 'View {{ $talent->name }}\'s professional profile and skills on TalentConnect',
+                title: 'Lihat {{ $talent->name }} di TalentConnect',
+                text: 'Lihat profil profesional dan keahlian {{ $talent->name }} di TalentConnect',
                 url: window.location.href
             }).catch(console.error);
         } else {
             // Fallback: copy to clipboard
             navigator.clipboard.writeText(window.location.href).then(() => {
                 // Show toast notification
-                showToast('Profile link copied to clipboard!');
+                showToast('Tautan profil disalin ke clipboard!');
             }).catch(() => {
                 // Fallback: show modal with link
                 showShareModal();
@@ -440,7 +440,7 @@
         modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
         modal.innerHTML = `
             <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Share Profile</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Bagikan Profil</h3>
                 <div class="flex items-center space-x-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg mb-4">
                     <input type="text" value="${window.location.href}" readonly class="flex-1 bg-transparent text-sm text-gray-700 dark:text-gray-300 focus:outline-none">
                     <button onclick="copyLink()" class="text-purple-600 hover:text-purple-700 dark:text-purple-400">
@@ -450,7 +450,7 @@
                     </button>
                 </div>
                 <button onclick="closeShareModal()" class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
-                    Close
+                    Tutup
                 </button>
             </div>
         `;
@@ -461,7 +461,7 @@
     // Copy link function
     function copyLink() {
         navigator.clipboard.writeText(window.location.href).then(() => {
-            showToast('Link copied to clipboard!');
+            showToast('Tautan disalin ke clipboard!');
             closeShareModal();
         });
     }
@@ -486,8 +486,8 @@
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
                 </svg>
-                Grid View
-            `;
+                Tampilan Grid
+            `; // Changed from Grid View to Tampilan Grid
         } else {
             // Switch to grid view
             container.className = 'grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 transition-all duration-300';
@@ -495,8 +495,8 @@
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                 </svg>
-                List View
-            `;
+                Tampilan Daftar
+            `; // Changed from List View to Tampilan Daftar
         }
     }
 
@@ -506,11 +506,11 @@
         const shortDesc = button.previousElementSibling;
         const fullDesc = button.nextElementSibling;
 
-        if (button.textContent.trim() === 'Read more') {
-            button.textContent = 'Read less';
+        if (button.textContent.trim() === 'Baca selengkapnya') {
+            button.textContent = 'Baca lebih sedikit';
             button.previousElementSibling.textContent = fullDesc.textContent;
         } else {
-            button.textContent = 'Read more';
+            button.textContent = 'Baca selengkapnya';
             const originalText = fullDesc.textContent;
             button.previousElementSibling.textContent = originalText.substring(0, 100) + '...';
         }
@@ -566,6 +566,25 @@
         document.querySelectorAll('.skill-card').forEach(card => {
             observer.observe(card);
         });
+
+        // Initial state for skills view toggle button
+        const skillsViewToggle = document.getElementById('skillsViewToggle');
+        const skillsContainer = document.getElementById('skillsContainer');
+        if (skillsContainer.classList.contains('grid')) {
+             skillsViewToggle.innerHTML = `
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                </svg>
+                Tampilan Daftar
+            `; // Set to "Tampilan Daftar" if default is grid
+        } else {
+             skillsViewToggle.innerHTML = `
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                </svg>
+                Tampilan Grid
+            `; // Set to "Tampilan Grid" if default is list
+        }
     });
 
     // Add CSS animations
@@ -592,14 +611,14 @@
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
-            background: #1f2937;
+            background: #1f2937; /* dark:bg-gray-800 */
             color: white;
             padding: 0.5rem;
-            border-radius: 0.375rem;
-            font-size: 0.75rem;
+            border-radius: 0.375rem; /* rounded-md */
+            font-size: 0.75rem; /* text-xs */
             white-space: nowrap;
             z-index: 1000;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.25rem; /* mb-1 */
         }
 
         .tooltip:hover::before {
@@ -609,7 +628,7 @@
             left: 50%;
             transform: translateX(-50%);
             border: 4px solid transparent;
-            border-top-color: #1f2937;
+            border-top-color: #1f2937; /* dark:bg-gray-800 */
             z-index: 1000;
         }
     `;

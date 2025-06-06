@@ -24,14 +24,26 @@ Route::middleware(['auth', 'verified', 'role:user'])->prefix('requests')->name('
     Route::post('/store-direct/{talent}', [UserTalentRequestController::class, 'storeDirect'])->name('store-direct');
     Route::post('/', [UserTalentRequestController::class, 'store'])->name('store');
     Route::get('/{talentRequest}', [UserTalentRequestController::class, 'show'])->name('show'); // Added show route
-    Route::get('/{talentRequest}/enhanced-results', [UserTalentRequestController::class, 'enhancedResults'])->name('enhanced-results'); // Enhanced DSS results
     Route::delete('/{talentRequest}', [UserTalentRequestController::class, 'destroy'])->name('destroy'); // Assuming users can delete their requests before approval
 });
 
-// User Talent Discovery Routes
+// User Talent Discovery Routes with MIS functionality
 Route::middleware(['auth', 'verified', 'role:user'])->prefix('talents')->name('user.talents.')->group(function () {
     Route::get('/', [App\Http\Controllers\User\TalentController::class, 'index'])->name('index');
     Route::get('/search', [App\Http\Controllers\User\TalentController::class, 'search'])->name('search');
+    Route::get('/analytics', [App\Http\Controllers\User\TalentController::class, 'analytics'])->name('analytics');
+    Route::get('/shortlist', [App\Http\Controllers\User\TalentController::class, 'shortlist'])->name('shortlist');
+    Route::get('/compare', [App\Http\Controllers\User\TalentController::class, 'compare'])->name('compare');
+
+    // Saved searches
+    Route::post('/searches', [App\Http\Controllers\User\TalentController::class, 'saveSearch'])->name('searches.save');
+    Route::get('/searches/{search}', [App\Http\Controllers\User\TalentController::class, 'loadSearch'])->name('searches.load');
+    Route::delete('/searches/{search}', [App\Http\Controllers\User\TalentController::class, 'deleteSearch'])->name('searches.delete');
+
+    // Shortlist management
+    Route::post('/{talent}/shortlist', [App\Http\Controllers\User\TalentController::class, 'addToShortlist'])->name('shortlist.add');
+    Route::delete('/{talent}/shortlist', [App\Http\Controllers\User\TalentController::class, 'removeFromShortlist'])->name('shortlist.remove');
+
     Route::get('/{talent}', [App\Http\Controllers\User\TalentController::class, 'show'])->name('show');
 });
 

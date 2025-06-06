@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('competency_talent_request', function (Blueprint $table) {
-            $table->boolean('is_critical')->default(false)->after('weight');
+        Schema::table('competencies', function (Blueprint $table) {
+            $table->string('category')->default('General')->after('name');
+            $table->text('description')->nullable()->after('category');
         });
     }
 
@@ -21,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('competency_talent_request', function (Blueprint $table) {
-            $table->dropColumn('is_critical');
+        Schema::table('competencies', function (Blueprint $table) {
+            $table->dropColumn(['category', 'description']);
         });
     }
 };

@@ -11,16 +11,16 @@
                         </svg>
                     </div>
                     <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-                        Talent Request Details
+                        Detail Permintaan Talent
                     </h1>
                 </div>
-                <p class="text-lg text-gray-600 dark:text-gray-400 ml-14">Review and respond to your assignment</p>
+                <p class="text-lg text-gray-600 dark:text-gray-400 ml-14">Tinjau dan tanggapi penugasan Anda</p>
             </div>
             <a href="{{ route('talent.requests.index') }}" class="inline-flex items-center px-6 py-3 border border-gray-200 dark:border-gray-600 shadow-sm text-sm font-medium rounded-xl text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-all duration-200 group">
                 <svg class="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
-                Back to Requests
+                Kembali ke Daftar Permintaan
             </a>
         </div>
 
@@ -34,7 +34,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Request Information</h2>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Informasi Permintaan</h2>
                 </div>
             </div>
 
@@ -45,33 +45,33 @@
                     <div class="space-y-6">
                         <!-- From User -->
                         <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 border border-gray-100 dark:border-gray-600">
-                            <dt class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">From User</dt>
+                            <dt class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Dari Pengguna</dt>
                             <dd class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                                 <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center mr-3">
                                     <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
                                 </div>
-                                {{ $talentRequest->requestingUser->name ?? 'N/A' }}
+                                {{ $talentRequest->requestingUser->name ?? 'T/A' }}
                             </dd>
                         </div>
 
                         <!-- User Phone -->
                         <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 border border-gray-100 dark:border-gray-600">
-                            <dt class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Contact Phone</dt>
+                            <dt class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Nomor Kontak</dt>
                             <dd class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                                 <div class="w-10 h-10 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center mr-3">
                                     <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                                     </svg>
                                 </div>
-                                {{ $talentRequest->requestingUser->phone_number ?? 'N/A' }}
+                                {{ $talentRequest->requestingUser->phone_number ?? 'T/A' }}
                             </dd>
                         </div>
 
                         <!-- Requester Domicile -->
                         <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 border border-gray-100 dark:border-gray-600">
-                            <dt class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Requester Location</dt>
+                            <dt class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Lokasi Pemohon</dt>
                             <dd class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                                 <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/50 rounded-full flex items-center justify-center mr-3">
                                     <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,7 +79,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     </svg>
                                 </div>
-                                {{ $talentRequest->requestingUser->domicile_city ?? 'N/A' }}@if($talentRequest->requestingUser->domicile_city && $talentRequest->requestingUser->domicile_country), @endif{{ $talentRequest->requestingUser->domicile_country ?? '' }}
+                                {{ $talentRequest->requestingUser->domicile_city ?? 'T/A' }}@if($talentRequest->requestingUser->domicile_city && $talentRequest->requestingUser->domicile_country), @endif{{ $talentRequest->requestingUser->domicile_country ?? '' }}
                             </dd>
                         </div>
                     </div>
@@ -88,7 +88,7 @@
                     <div class="space-y-6">
                         <!-- Request Submitted -->
                         <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 border border-gray-100 dark:border-gray-600">
-                            <dt class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Request Submitted</dt>
+                            <dt class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Permintaan Diajukan</dt>
                             <dd class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                                 <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900/50 rounded-full flex items-center justify-center mr-3">
                                     <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,11 +101,31 @@
 
                         <!-- Assignment Status -->
                         <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 border border-gray-100 dark:border-gray-600">
-                            <dt class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Your Assignment Status</dt>
+                            <dt class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Status Penugasan Anda</dt>
                             <dd class="flex items-center">
                                 @php
                                     $assignmentStatus = $currentAssignmentStatus ?? 'unknown';
                                     $isDirectOffer = ($assignmentType ?? 'standard') === 'direct_offer';
+                                    $statusText = '';
+                                    switch($assignmentStatus) {
+                                        case 'direct_offer_pending':
+                                            $statusText = 'Tawaran Langsung Menunggu';
+                                            break;
+                                        case 'pending_assignment_response':
+                                            $statusText = 'Menunggu Respons Penugasan';
+                                            break;
+                                        case 'approved_by_talent':
+                                            $statusText = 'Disetujui oleh Talent';
+                                            break;
+                                        case 'rejected_by_talent':
+                                            $statusText = 'Ditolak oleh Talent';
+                                            break;
+                                        default:
+                                            $statusText = 'Status Tidak Diketahui';
+                                    }
+                                    if ($isDirectOffer && $assignmentStatus === 'pending_assignment_response') { // This case is noted as "Should not happen"
+                                        $statusText = 'Tawaran Langsung: ' . $statusText;
+                                    }
                                 @endphp
                                 <span class="px-4 py-2 inline-flex text-sm leading-5 font-bold rounded-full border-2
                                     @switch($assignmentStatus)
@@ -145,13 +165,7 @@
                                             </svg>
                                             @break
                                     @endswitch
-                                    @if($isDirectOffer && $assignmentStatus === 'direct_offer_pending')
-                                        Direct Offer Pending
-                                    @elseif($isDirectOffer && $assignmentStatus === 'pending_assignment_response') {{-- Should not happen with correct logic --}}
-                                        Direct Offer: {{ Str::title(str_replace('_', ' ', $assignmentStatus)) }}
-                                    @else
-                                        {{ Str::title(str_replace('_', ' ', $assignmentStatus)) }}
-                                    @endif
+                                    {{ $statusText }}
                                 </span>
                             </dd>
                         </div>
@@ -164,7 +178,7 @@
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        Request Details
+                        Detail Permintaan
                     </dt>
                     <dd class="text-lg text-gray-900 dark:text-white leading-relaxed whitespace-pre-wrap bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-600 shadow-sm">
                         {{ $talentRequest->details }}
@@ -179,37 +193,51 @@
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                             </svg>
-                            Work Location Type
+                            Jenis Lokasi Kerja
                         </dt>
                         <dd class="flex items-center flex-wrap gap-3">
+                            @php
+                                $workLocationTypeText = '';
+                                switch($talentRequest->work_location_type) {
+                                    case 'remote':
+                                        $workLocationTypeText = 'Remote';
+                                        break;
+                                    case 'hybrid':
+                                        $workLocationTypeText = 'Hybrid';
+                                        break;
+                                    // Assuming 'on_site' or similar for office
+                                    default: // Catches 'on_site' and any other values
+                                        $workLocationTypeText = 'Di Tempat'; // Or more generic: Str::title(str_replace('_', ' ', $talentRequest->work_location_type))
+                                }
+                            @endphp
                             <span class="text-xl font-bold text-gray-900 dark:text-white">
-                                {{ Str::title(str_replace('_', ' ', $talentRequest->work_location_type)) }}
+                                {{ $workLocationTypeText }}
                             </span>
                             @if($talentRequest->work_location_type === 'remote')
                                 <span class="px-4 py-2 text-sm font-bold rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-2 border-green-200 dark:border-green-600">
-                                    🌍 Work from anywhere
+                                    🌍 Bekerja dari mana saja
                                 </span>
                             @elseif($talentRequest->work_location_type === 'hybrid')
                                 <span class="px-4 py-2 text-sm font-bold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 border-2 border-blue-200 dark:border-blue-600">
-                                    🏢🏠 Flexible arrangement
+                                    🏢🏠 Pengaturan fleksibel
                                 </span>
                             @else
                                 <span class="px-4 py-2 text-sm font-bold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 border-2 border-orange-200 dark:border-orange-600">
-                                    🏢 Office required
+                                    🏢 Wajib di kantor
                                 </span>
                             @endif
                         </dd>
 
                         @if ($talentRequest->work_location_type !== 'remote')
                         <div class="mt-6 pt-6 border-t border-indigo-200 dark:border-indigo-700">
-                            <dt class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Work Location</dt>
+                            <dt class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Lokasi Kerja</dt>
                             <dd class="flex items-center flex-wrap gap-3">
                                 <div class="flex items-center text-xl font-bold text-gray-900 dark:text-white">
                                     <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     </svg>
-                                    {{ $talentRequest->work_location_city ?? 'N/A' }}{{ $talentRequest->work_location_city && $talentRequest->work_location_country ? ', ' : '' }}{{ $talentRequest->work_location_country ?? 'N/A' }}
+                                    {{ $talentRequest->work_location_city ?? 'T/A' }}{{ $talentRequest->work_location_city && $talentRequest->work_location_country ? ', ' : '' }}{{ $talentRequest->work_location_country ?? 'T/A' }}
                                 </div>
                                 @php
                                     $user = Auth::user();
@@ -220,11 +248,11 @@
                                 @endphp
                                 @if($sameCity)
                                     <span class="px-4 py-2 text-sm font-bold rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-2 border-green-200 dark:border-green-600">
-                                        📍 Same city as you
+                                        📍 Kota yang sama dengan Anda
                                     </span>
                                 @elseif($sameCountry)
                                     <span class="px-4 py-2 text-sm font-bold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 border-2 border-blue-200 dark:border-blue-600">
-                                        🗺️ Same country as you
+                                        🗺️ Negara yang sama dengan Anda
                                     </span>
                                 @endif
                             </dd>
@@ -239,7 +267,7 @@
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                             </svg>
-                            Requested Competencies
+                            Kompetensi yang Diminta
                         </dt>
                         <dd class="space-y-3">
                             @foreach ($talentRequest->competencies as $competency)
@@ -257,7 +285,7 @@
                                                 bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300
                                             @endif
                                         ">
-                                            Level {{ $competency->pivot->level_required }}
+                                            Tingkat {{ $competency->pivot->level_required }}
                                         </span>
                                     </div>
                                 </div>
@@ -270,7 +298,7 @@
                             <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                             </svg>
-                            <p class="text-lg font-medium text-gray-500 dark:text-gray-400">No specific competencies requested</p>
+                            <p class="text-lg font-medium text-gray-500 dark:text-gray-400">Tidak ada kompetensi spesifik yang diminta</p>
                         </div>
                     </div>
                     @endif
@@ -286,46 +314,46 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/>
                         </svg>
                     </div>
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Respond to Your Assignment</h2>
-                    <p class="text-lg text-gray-600 dark:text-gray-400">Please review the request details and choose your response</p>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Tanggapi Penugasan Anda</h2>
+                    <p class="text-lg text-gray-600 dark:text-gray-400">Harap tinjau detail permintaan dan pilih respons Anda</p>
                 </div>
 
                 <!-- Action Buttons Section -->
                 @if ($currentAssignmentStatus === 'pending_assignment_response' || $currentAssignmentStatus === 'direct_offer_pending')
                 <div class="mt-10 pt-8 border-t border-gray-200 dark:border-gray-700">
-                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Respond to this {{ $isDirectOffer ? 'Direct Offer' : 'Request' }}</h3>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Tanggapi {{ $isDirectOffer ? 'Tawaran Langsung' : 'Permintaan' }} ini</h3>
                     <form action="{{ route('talent.requests.respond', $talentRequest->id) }}" method="POST" class="space-y-6">
                         @csrf
                         {{-- Optional: Add a comments section here in the future --}}
                         {{-- <div class="mb-6">
-                            <label for="comments" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Comments (Optional)</label>
+                            <label for="comments" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Komentar (Opsional)</label>
                             <textarea name="comments" id="comments" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"></textarea>
                         </div> --}}
                         <div class="flex flex-col sm:flex-row items-center sm:justify-end space-y-4 sm:space-y-0 sm:space-x-4">
                             <button type="submit" name="action" value="reject"
                                     class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-red-300 dark:border-red-600 shadow-sm text-base font-medium rounded-xl text-red-700 dark:text-red-300 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-900 transition-all duration-200 group">
                                 <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                Reject {{ $isDirectOffer ? 'Offer' : 'Assignment' }}
+                                Tolak {{ $isDirectOffer ? 'Tawaran' : 'Penugasan' }}
                             </button>
                             <button type="submit" name="action" value="approve"
                                     class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-transparent shadow-sm text-base font-medium rounded-xl text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-offset-gray-900 transition-all duration-200 group">
                                 <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Approve {{ $isDirectOffer ? 'Offer' : 'Assignment' }}
+                                Setujui {{ $isDirectOffer ? 'Tawaran' : 'Penugasan' }}
                             </button>
                         </div>
                     </form>
                 </div>
                 @elseif($currentAssignmentStatus === 'approved_by_talent' || $currentAssignmentStatus === 'rejected_by_talent')
                 <div class="mt-10 pt-8 border-t border-gray-200 dark:border-gray-700">
-                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Your Response</h3>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Respons Anda</h3>
                     <div class="p-6 rounded-xl
                         @if($currentAssignmentStatus === 'approved_by_talent') bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-600
                         @else bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-600 @endif">
                         <p class="text-lg font-medium
                             @if($currentAssignmentStatus === 'approved_by_talent') text-green-700 dark:text-green-200
                             @else text-red-700 dark:text-red-200 @endif">
-                            You have already responded to this {{ $isDirectOffer ? 'direct offer' : 'assignment' }}. You chose to
-                            <span class="font-bold">{{ $currentAssignmentStatus === 'approved_by_talent' ? 'approve' : 'reject' }}</span> it.
+                            Anda sudah menanggapi {{ $isDirectOffer ? 'tawaran langsung' : 'penugasan' }} ini. Anda memilih untuk
+                            <span class="font-bold">{{ $currentAssignmentStatus === 'approved_by_talent' ? 'menyetujui' : 'menolak' }}</span>nya.
                         </p>
                         {{-- You can add display for comments here if they are implemented --}}
                     </div> {{-- Closes the p-6 rounded-xl div (green/red box) --}}

@@ -26,14 +26,7 @@
             </div>
         @endif
 
-        {{-- DSS Error Message --}}
-        @if(isset($dssErrorMessage) && $dssErrorMessage)
-            <div class="bg-yellow-100 dark:bg-yellow-800/30 border border-yellow-400 dark:border-yellow-600 text-yellow-700 dark:text-yellow-300 px-4 py-3 rounded-lg relative mb-6 shadow-sm" role="alert">
-                <p class="font-bold">Decision Support System Alert:</p>
-                <p>{{ $dssErrorMessage }}</p>
-                <p class="mt-1 text-sm">Talent ranking may be unavailable or incomplete due to this issue. Please review the talent request's competency configuration.</p>
-            </div>
-        @endif
+
 
         {{-- Notice for Direct Offer Pending --}}
         @if($hasDirectOfferPending)
@@ -47,7 +40,7 @@
         @if($isPendingAdminAfterDirectOfferRejection)
             <div class="bg-orange-100 dark:bg-orange-800/30 border border-orange-400 dark:border-orange-600 text-orange-700 dark:text-orange-300 px-4 py-3 rounded-lg relative mb-6 shadow-sm" role="alert">
                 <p class="font-bold">Action Required: Direct Offer Rejected</p>
-                <p>The direct offer made by the requester was rejected by the talent. This request is now pending your review. You can proceed to assign talents using the Decision Support System below or take other actions.</p>
+                <p>The direct offer made by the requester was rejected by the talent. This request is now pending your review. You can proceed to assign talents using the talent assignment system below or take other actions.</p>
             </div>
         @endif
 
@@ -192,10 +185,10 @@
                 <p class="text-gray-600 dark:text-gray-400">Assignment is currently disabled because a direct offer is pending talent response.</p>
             </div>
         @else
-            {{-- Show DSS and assignment form if no direct offer is pending, OR if a direct offer was made but then rejected --}}
+            {{-- Show talent assignment form if no direct offer is pending, OR if a direct offer was made but then rejected --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden ring-1 ring-gray-200 dark:ring-gray-700 mb-10">
                 <div class="px-6 py-8 sm:px-8">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">🎯 Assign Talents (DSS)</h2>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">🎯 Assign Talents</h2>
 
                     @if ($rankedTalents->isNotEmpty())
                         <form action="{{ route('admin.talent-requests.assign', $talentRequest) }}" method="POST">
@@ -214,43 +207,15 @@
                                                         <div class="flex items-center justify-between mb-2">
                                                             <p class="text-lg font-medium text-indigo-600 dark:text-indigo-400 truncate">{{ $talent['talent']->name }}</p>
                                                             <div class="flex items-center space-x-2">
-                                                                <!-- Enhanced Scoring Display -->
+                                                                <!-- Simple Scoring Display -->
                                                                 <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-800/50 text-green-800 dark:text-green-300">
-                                                                    Total: {{ number_format($talent['dss_score'] ?? 0, 3) }}
+                                                                    Score: {{ number_format($talent['total_score'], 2) }}
                                                                 </span>
-                                                                @if(isset($talent['confidence_score']))
-                                                                    <span class="px-2 py-1 text-xs font-semibold rounded-full
-                                                                        @if($talent['confidence_score'] >= 0.8) bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                                                                        @elseif($talent['confidence_score'] >= 0.6) bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                                                                        @else bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
-                                                                        @endif
-                                                                    ">
-                                                                        Confidence: {{ number_format($talent['confidence_score'] * 100, 0) }}%
-                                                                    </span>
-                                                                @endif
                                                             </div>
                                                         </div>
                                                         <p class="text-sm text-gray-500 dark:text-gray-400 truncate mb-3">{{ $talent['talent']->email }}</p>
 
-                                                        <!-- Enhanced Score Breakdown -->
-                                                        @if(isset($talent['competency_score']) || isset($talent['location_score']))
-                                                            <div class="grid grid-cols-2 gap-4 mb-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-                                                                @if(isset($talent['competency_score']))
-                                                                    <div class="text-center">
-                                                                        <div class="text-xs text-gray-500 dark:text-gray-400">Competency Score</div>
-                                                                        <div class="text-sm font-semibold text-blue-600 dark:text-blue-400">{{ number_format($talent['competency_score'], 3) }}</div>
-                                                                    </div>
-                                                                @endif
-                                                                @if(isset($talent['location_score']))
-                                                                    <div class="text-center">
-                                                                        <div class="text-xs text-gray-500 dark:text-gray-400">Location Score</div>
-                                                                        <div class="text-sm font-semibold text-green-600 dark:text-green-400">{{ number_format($talent['location_score'], 3) }}</div>
-                                                                    </div>
-                                                                @endif
-                                                            </div>
-                                                        @endif
-
-                                                        <!-- Competencies with Enhanced Display -->
+                                                        <!-- Competencies Display -->
                                                         <div class="flex flex-wrap gap-2 mt-2 mb-3">
                                                             @foreach ($talent['talent']->competencies as $competency)
                                                                 @php
