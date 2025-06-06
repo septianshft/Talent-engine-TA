@@ -35,6 +35,9 @@ Route::middleware(['auth', 'verified', 'role:user'])->prefix('talents')->name('u
     Route::get('/shortlist', [App\Http\Controllers\User\TalentController::class, 'shortlist'])->name('shortlist');
     Route::get('/compare', [App\Http\Controllers\User\TalentController::class, 'compare'])->name('compare');
 
+    // Cache management
+    Route::post('/cache/clear', [App\Http\Controllers\User\TalentController::class, 'clearAnalyticsCache'])->name('cache.clear');
+
     // Saved searches
     Route::post('/searches', [App\Http\Controllers\User\TalentController::class, 'saveSearch'])->name('searches.save');
     Route::get('/searches/{search}', [App\Http\Controllers\User\TalentController::class, 'loadSearch'])->name('searches.load');

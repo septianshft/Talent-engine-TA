@@ -10,6 +10,7 @@ use App\Models\TalentShortlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class TalentController extends Controller
 {
@@ -503,13 +504,24 @@ class TalentController extends Controller
 
         $stats = $this->getAnalyticsData();
 
-        return view('user.talents.analytics', compact('stats'));
+        return view('user.talents.analytics_optimized', compact('stats'));
     }
 
     /**
-     * Get comprehensive analytics data for Phase 2 MIS
+     * Get comprehensive analytics data for Phase 2 MIS with Redis caching
      */
     private function getAnalyticsData()
+    {
+        // Use Redis caching for analytics data with 5-minute TTL for better performance
+        return Cache::remember('mis_analytics_data', 300, function () {
+            return $this->generateAnalyticsData();
+        });
+    }
+
+    /**
+     * Generate fresh analytics data (cached by getAnalyticsData)
+     */
+    private function generateAnalyticsData()
     {
         $talentQuery = User::whereHas('roles', function ($q) {
             $q->where('name', 'talent');
@@ -575,32 +587,34 @@ class TalentController extends Controller
     }
 
     /**
-     * Get competency gap analysis for strategic planning
+     * Get competency gap analysis for strategic planning with caching
      */
     private function getCompetencyGapAnalysis()
     {
-        // Analyze competencies that are in high demand but low supply
-        $competencyDemand = Competency::withCount(['users' => function($query) {
-            $query->whereHas('roles', function($q) {
-                $q->where('name', 'talent');
-            });
-        }])->get()->map(function($competency) {
-            $avgProficiency = $competency->users()
-                ->whereHas('roles', function($q) {
+        return Cache::remember('competency_gap_analysis', 600, function () {
+            // Analyze competencies that are in high demand but low supply
+            $competencyDemand = Competency::withCount(['users' => function($query) {
+                $query->whereHas('roles', function($q) {
                     $q->where('name', 'talent');
-                })
-                ->avg('competency_user.proficiency_level') ?: 0;
+                });
+            }])->get()->map(function($competency) {
+                $avgProficiency = $competency->users()
+                    ->whereHas('roles', function($q) {
+                        $q->where('name', 'talent');
+                    })
+                    ->avg('competency_user.proficiency_level') ?: 0;
 
-            return [
-                'name' => $competency->name,
-                'category' => $competency->category,
-                'talent_count' => $competency->users_count,
-                'avg_proficiency' => round($avgProficiency, 2),
-                'gap_score' => $this->calculateGapScore($competency->users_count, $avgProficiency)
-            ];
-        })->sortByDesc('gap_score')->take(10);
+                return [
+                    'name' => $competency->name,
+                    'category' => $competency->category,
+                    'talent_count' => $competency->users_count,
+                    'avg_proficiency' => round($avgProficiency, 2),
+                    'gap_score' => $this->calculateGapScore($competency->users_count, $avgProficiency)
+                ];
+            })->sortByDesc('gap_score')->take(10);
 
-        return $competencyDemand;
+            return $competencyDemand;
+        });
     }
 
     /**
@@ -616,70 +630,74 @@ class TalentController extends Controller
     }
 
     /**
-     * Get talent pipeline data for recruitment planning
+     * Get talent pipeline data for recruitment planning with caching
      */
     private function getTalentPipelineData()
     {
-        $totalTalents = User::whereHas('roles', function ($q) {
-            $q->where('name', 'talent');
-        })->count();
+        return Cache::remember('talent_pipeline_data', 600, function () {
+            $totalTalents = User::whereHas('roles', function ($q) {
+                $q->where('name', 'talent');
+            })->count();
 
-        // Categorize talents by experience level (based on avg proficiency)
-        $pipeline = User::whereHas('roles', function ($q) {
-            $q->where('name', 'talent');
-        })->with('competencies')->get()->map(function($talent) {
-            $avgProficiency = $talent->competencies->avg('pivot.proficiency_level') ?: 0;
+            // Categorize talents by experience level (based on avg proficiency)
+            $pipeline = User::whereHas('roles', function ($q) {
+                $q->where('name', 'talent');
+            })->with('competencies')->get()->map(function($talent) {
+                $avgProficiency = $talent->competencies->avg('pivot.proficiency_level') ?: 0;
 
-            if ($avgProficiency >= 3.5) return 'senior';
-            if ($avgProficiency >= 2.5) return 'mid';
-            return 'junior';
-        })->countBy();
+                if ($avgProficiency >= 3.5) return 'senior';
+                if ($avgProficiency >= 2.5) return 'mid';
+                return 'junior';
+            })->countBy();
 
-        return [
-            'total' => $totalTalents,
-            'junior' => $pipeline->get('junior', 0),
-            'mid' => $pipeline->get('mid', 0),
-            'senior' => $pipeline->get('senior', 0),
-            'junior_percentage' => $totalTalents > 0 ? round(($pipeline->get('junior', 0) / $totalTalents) * 100, 1) : 0,
-            'mid_percentage' => $totalTalents > 0 ? round(($pipeline->get('mid', 0) / $totalTalents) * 100, 1) : 0,
-            'senior_percentage' => $totalTalents > 0 ? round(($pipeline->get('senior', 0) / $totalTalents) * 100, 1) : 0,
-        ];
+            return [
+                'total' => $totalTalents,
+                'junior' => $pipeline->get('junior', 0),
+                'mid' => $pipeline->get('mid', 0),
+                'senior' => $pipeline->get('senior', 0),
+                'junior_percentage' => $totalTalents > 0 ? round(($pipeline->get('junior', 0) / $totalTalents) * 100, 1) : 0,
+                'mid_percentage' => $totalTalents > 0 ? round(($pipeline->get('mid', 0) / $totalTalents) * 100, 1) : 0,
+                'senior_percentage' => $totalTalents > 0 ? round(($pipeline->get('senior', 0) / $totalTalents) * 100, 1) : 0,
+            ];
+        });
     }
 
     /**
-     * Get geographic insights for talent distribution analysis
+     * Get geographic insights for talent distribution analysis with caching
      */
     private function getGeographicInsights()
     {
-        $totalTalents = User::whereHas('roles', function ($q) {
-            $q->where('name', 'talent');
-        })->count();
+        return Cache::remember('geographic_insights', 600, function () {
+            $totalTalents = User::whereHas('roles', function ($q) {
+                $q->where('name', 'talent');
+            })->count();
 
-        $countryData = User::whereHas('roles', function ($q) {
-            $q->where('name', 'talent');
-        })->selectRaw('domicile_country, COUNT(*) as count')
-          ->whereNotNull('domicile_country')
-          ->groupBy('domicile_country')
-          ->orderBy('count', 'desc')
-          ->get();
+            $countryData = User::whereHas('roles', function ($q) {
+                $q->where('name', 'talent');
+            })->selectRaw('domicile_country, COUNT(*) as count')
+              ->whereNotNull('domicile_country')
+              ->groupBy('domicile_country')
+              ->orderBy('count', 'desc')
+              ->get();
 
-        $remoteCapable = User::whereHas('roles', function ($q) {
-            $q->where('name', 'talent');
-        })->where('can_work_remote', true)->count();
+            $remoteCapable = User::whereHas('roles', function ($q) {
+                $q->where('name', 'talent');
+            })->where('can_work_remote', true)->count();
 
-        return [
-            'total_countries' => $countryData->count(),
-            'top_countries' => $countryData->take(8),
-            'country_distribution' => $countryData->map(function($country) use ($totalTalents) {
-                return [
-                    'country' => $country->domicile_country,
-                    'count' => $country->count,
-                    'percentage' => $totalTalents > 0 ? round(($country->count / $totalTalents) * 100, 1) : 0
-                ];
-            }),
-            'remote_capable' => $remoteCapable,
-            'remote_percentage' => $totalTalents > 0 ? round(($remoteCapable / $totalTalents) * 100, 1) : 0
-        ];
+            return [
+                'total_countries' => $countryData->count(),
+                'top_countries' => $countryData->take(8),
+                'country_distribution' => $countryData->map(function($country) use ($totalTalents) {
+                    return [
+                        'country' => $country->domicile_country,
+                        'count' => $country->count,
+                        'percentage' => $totalTalents > 0 ? round(($country->count / $totalTalents) * 100, 1) : 0
+                    ];
+                }),
+                'remote_capable' => $remoteCapable,
+                'remote_percentage' => $totalTalents > 0 ? round(($remoteCapable / $totalTalents) * 100, 1) : 0
+            ];
+        });
     }
 
     /**
@@ -920,5 +938,22 @@ class TalentController extends Controller
                 })->sortByDesc('talent_count')->values()
             ];
         })->sortByDesc('total_talents')->values();
+    }
+
+    /**
+     * Clear analytics cache - call this when talent data changes
+     */
+    public function clearAnalyticsCache()
+    {
+        Cache::forget('mis_analytics_data');
+        Cache::forget('competency_gap_analysis');
+        Cache::forget('talent_pipeline_data');
+        Cache::forget('geographic_insights');
+        Cache::forget('performance_metrics');
+        Cache::forget('search_analytics');
+        Cache::forget('category_insights');
+        Cache::forget('trend_analysis');
+
+        return response()->json(['message' => 'Analytics cache cleared successfully']);
     }
 }
