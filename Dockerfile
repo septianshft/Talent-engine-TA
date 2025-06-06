@@ -1,0 +1,120 @@
+# Dockerfile for Laravel on Render with PostgreSQL and Vite
+
+# Use a base image with Nginx and PHP.
+# Ensure this tag provides PHP 8.0+ for Laravel 9+ (e.g., richarvey/nginx-php-fpm:3.1.6 or newer)
+FROM richarvey/nginx-php-fpm:latest
+
+# Install system dependencies:
+# - nodejs & npm: for building frontend assets
+# - postgresql-dev: for compiling the pdo_pgsql PHP extension
+# - libxml2-dev: for xml, dom, tokenizer extensions
+# - libzip-dev: for zip extension
+RUN apk add --no-cache nodejs npm postgresql-dev libxml2-dev libzip-dev
+
+# Install required PHP extensions:
+# Explicitly install pdo_pgsql for PostgreSQL database connectivity
+# and zip as it is often required by composer packages.
+RUN docker-php-ext-install pdo_pgsql zip
+
+# The base image (richarvey/nginx-php-fpm) likely includes many other common Laravel extensions
+# (e.g., mbstring, openssl, tokenizer, xml, dom, fileinfo).
+
+# Set working directory
+WORKDIR /var/www/html
+
+# --- Asset Preparation (Early) ---
+# Ensure target directories exist for asset copying or publishing
+RUN mkdir -p /var/www/html/public/images && \
+    mkdir -p /var/www/html/public/flux
+
+# --- PHP Dependencies ---
+# Copy composer files first to leverage Docker cache
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies for production
+# COMPOSER_ALLOW_SUPERUSER=1 is set as an ENV var later, but it\\\'s effective for RUN commands too.
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+
+# --- Node.js Dependencies & Frontend Build ---
+# Copy package manager files
+COPY package.json package-lock.json ./
+# If you use yarn, copy yarn.lock and use yarn commands
+
+# Install Node.js dependencies
+RUN npm install
+
+# Copy the rest of the application files
+# This includes your .env.example (though Render uses its own env var system),
+# config files, routes, resources, etc.
+COPY . .
+
+# --- Permissions ---
+# Set permissions for Laravel storage and cache directories.
+# This should be done after copying files and before composer install or artisan commands.
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# --- Asset Preparation (Post Copy/Vendor Publish) ---
+# Copy specific images from aset-foto to public/images.
+# The logo is renamed from 'cropped-Logo_Fiks_PUI-1_upscaled.png' to 'Logo_Fiks_PUI-11.png'
+# to match the error log. Please verify these are the correct source and target names.
+RUN cp /var/www/html/aset-foto/Login_page.svg /var/www/html/public/images/Login_page.svg && \
+    cp /var/www/html/aset-foto/cropped-Logo_Fiks_PUI-1_upscaled.png /var/www/html/public/images/Logo_Fiks_PUI-11.png
+
+# Publish Livewire assets to ensure livewire.min.js is available
+RUN php artisan vendor:publish --tag=livewire:assets --force
+
+# Attempt to publish assets for livewire/flux
+# Common tags could be 'flux-assets', 'livewire-flux-assets', or it might be included in 'livewire:assets'
+# If this specific tag doesn't exist, this command will likely be a no-op or show a non-critical message.
+RUN php artisan vendor:publish --tag=flux-assets --force
+
+# Build Vite assets for production
+# This command should compile your JS/CSS into the public/build directory
+RUN npm run build
+
+# --- Laravel Optimization (run after all files are present) ---
+# These commands improve performance in production.
+RUN php artisan config:cache
+RUN php artisan route:cache
+RUN php artisan view:cache
+
+# --- Environment Variables ---
+# WEBROOT tells the base image (richarvey/nginx-php-fpm) where your public directory is.
+ENV WEBROOT=/var/www/html/public
+# Send PHP errors to stderr for easier debugging on Render
+ENV PHP_ERRORS_STDERR=1
+# Enable run_scripts in /etc/cont-init.d for richarvey/nginx-php-fpm
+ENV RUN_SCRIPTS=1
+ENV REAL_IP_HEADER=1
+
+# Laravel specific environment variables
+# These will be set in Render's UI, but defaults are good for the image.
+ENV APP_ENV=production
+# Should always be false in production
+ENV APP_DEBUG=false
+# Recommended for containerized environments
+ENV LOG_CHANNEL=stderr
+# Default to PostgreSQL for Render
+ENV DB_CONNECTION=pgsql
+
+# Set SKIP_COMPOSER to 1 because we\\'ve already run composer install during the build.
+# This prevents the base image\\'s init script from trying to run it again at container startup.
+ENV SKIP_COMPOSER=1
+
+# Allow composer to run as root. This is sometimes needed if build steps or base image scripts run as root.
+# ENV COMPOSER_ALLOW_SUPERUSER=1 # This is already set before composer install, which is fine.
+
+# --- Permissions ---
+# The richarvey/nginx-php-fpm image typically handles permissions for /var/www/html
+# and runs PHP-FPM/Nginx as www-data. If you encounter permission issues with
+# storage/ or bootstrap/cache/, you might need to uncomment and adjust the following:
+# RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \\
+#     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# The above permission setting has been moved to an earlier appropriate step.
+
+# Expose port 80 for Nginx (Render will map this to 80/443 externally)
+EXPOSE 80
+
+# The CMD instruction specifies the command to run when the container starts.
+# The base image richarvey/nginx-php-fpm provides /start.sh which handles starting Nginx & PHP-FPM.
+CMD ["/start.sh"]

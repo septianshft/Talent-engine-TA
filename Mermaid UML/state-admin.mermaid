@@ -1,0 +1,37 @@
+stateDiagram-v2
+    direction LR
+
+    [*] --> Idle
+
+    Idle --> BrowsingRequests : Admin navigates to talent requests section
+
+    BrowsingRequests --> EvaluatingRequestForAction : Admin selects a request\n(status: 'pending_admin' or needs re-evaluation e.g. talent rejected direct offer)
+    BrowsingRequests --> MonitoringAssignments : Admin checks on requests\n(status: 'pending_talent_response' or 'direct_offer_pending')
+    BrowsingRequests --> ManagingApprovedRequest : Admin selects a request\n(status: 'approved' or 'work_in_progress')
+    BrowsingRequests --> Idle : Admin navigates away
+
+    EvaluatingRequestForAction --> AssigningTalents : Admin decides to assign/re-assign talents
+    EvaluatingRequestForAction --> ConfirmingRequestRejection : Admin decides to reject request
+    EvaluatingRequestForAction --> BrowsingRequests : Admin returns to list (no immediate action)
+
+    AssigningTalents --> MonitoringAssignments : Admin submits assignments
+    note on link
+        Request's status becomes 'pending_talent_response'.
+        Individual assignment statuses are 'pending_assignment_response'.
+    end note
+    AssigningTalents --> EvaluatingRequestForAction : Admin cancels assignment process
+
+    ConfirmingRequestRejection --> BrowsingRequests : Rejection is processed
+    note on link Request status changes to 'rejected_by_admin'. end note
+
+    MonitoringAssignments --> EvaluatingRequestForAction : Request needs admin re-evaluation\n(e.g., all assigned talents rejected, or direct offer talent rejected by talent)
+    MonitoringAssignments --> ManagingApprovedRequest : Talent(s) accepted, request becomes 'approved'
+    MonitoringAssignments --> BrowsingRequests : Admin returns to list (done monitoring for now)
+
+
+    ManagingApprovedRequest --> ConfirmingRequestCompletion : Admin decides to mark request as complete
+    ManagingApprovedRequest --> AssigningTalents : Admin needs to re-assign talent\n(e.g. previously approved talent dropped out - advanced scenario)
+    ManagingApprovedRequest --> BrowsingRequests : Admin returns to list (no immediate action)
+
+    ConfirmingRequestCompletion --> BrowsingRequests : Completion is processed
+    note on link Request status changes to 'completed'. end note

@@ -1,0 +1,92 @@
+@startuml TalentConnectUseCaseDiagram_ID
+left to right direction
+
+actor Pemohon as "Pemohon (Pengguna)"
+actor Talenta
+actor Admin
+
+rectangle "Sistem TalentConnect" {
+
+    package "Manajemen Akun Umum" {
+        usecase UC_Login as "Masuk / Keluar"
+        usecase UC_KelolaProfil as "Kelola Pengaturan Profil"
+        (UC_KelolaProfil) ..> (Perbarui Informasi Profil) : <<sertakan>>
+        (UC_KelolaProfil) ..> (Ubah Kata Sandi) : <<sertakan>>
+        (UC_KelolaProfil) ..> (Kelola Pengaturan Tampilan) : <<sertakan>>
+    }
+
+    package "Fungsi Pemohon" {
+        usecase UC_Pemohon_Dasbor as "Lihat Dasbor Pemohon"
+        usecase UC_Pemohon_BuatPermintaanStandar as "Buat Permintaan Talenta Standar"
+        (UC_Pemohon_BuatPermintaanStandar) ..> (Konfigurasi Kompetensi) : <<sertakan>>
+        (UC_Pemohon_BuatPermintaanStandar) ..> (Atur Kritis & Veto) : <<sertakan>>
+        (UC_Pemohon_BuatPermintaanStandar) ..> (Tentukan Lokasi) : <<sertakan>>
+        usecase UC_Pemohon_BuatPermintaanLangsung as "Buat Permintaan Talenta Langsung"
+        usecase UC_Pemohon_LihatPermintaanSaya as "Lihat Permintaan Talenta Saya"
+        usecase UC_Pemohon_LihatDetailPermintaanSaya as "Lihat Detail Permintaan Saya"
+        usecase UC_Pemohon_LihatHasilTingkat as "Lihat Hasil Penilaian yang Ditingkatkan"
+        usecase UC_Pemohon_HapusPermintaan as "Hapus Permintaan Talenta Saya"
+        usecase UC_Pemohon_JelajahiTalenta as "Jelajahi Talenta"
+        usecase UC_Pemohon_CariTalenta as "Cari Talenta"
+        usecase UC_Pemohon_LihatProfilTalenta as "Lihat Profil Talenta"
+    }
+
+    package "Fungsi Talenta" {
+        usecase UC_Talenta_Dasbor as "Lihat Dasbor Talenta"
+        usecase UC_Talenta_KelolaKompetensi as "Kelola Kompetensi Sendiri\n& Kemahiran"
+        usecase UC_Talenta_LihatPermintaanDitugaskan as "Lihat Permintaan yang Ditugaskan"
+        usecase UC_Talenta_LihatDetailPermintaanDitugaskan as "Lihat Detail Permintaan yang Ditugaskan"
+        usecase UC_Talenta_TanggapiPenugasan as "Tanggapi Penugasan\n(Setujui/Tolak)"
+    }
+
+    package "Fungsi Admin" {
+        usecase UC_Admin_Dasbor as "Lihat Dasbor Admin"
+        usecase UC_Admin_LihatSemuaPermintaan as "Lihat Semua Permintaan Talenta"
+        usecase UC_Admin_LihatDetailPermintaanApapun as "Lihat Detail Permintaan Apapun"
+        (UC_Admin_LihatDetailPermintaanApapun) ..> (Lihat Hasil Penilaian yang Ditingkatkan) : <<sertakan>>
+        usecase UC_Admin_PerbaruiStatusPermintaan as "Perbarui Status Permintaan\n(misalnya, Tolak)"
+        usecase UC_Admin_TugaskanTalenta as "Tugaskan Talenta ke Permintaan"
+        usecase UC_Admin_TandaiSelesai as "Tandai Permintaan sebagai Selesai"
+        usecase UC_Admin_KelolaKompetensiSistem as "Kelola Kompetensi Sistem (CRUD)"
+        ' Potensial: usecase UC_Admin_KelolaPengguna as "Kelola Pengguna Sistem (CRUD)"
+    }
+}
+
+' Manajemen Akun Umum untuk semua pengguna terotentikasi
+Pemohon --> UC_Login
+Pemohon --> UC_KelolaProfil
+Talenta ----> UC_Login
+Talenta ----> UC_KelolaProfil
+Admin -----> UC_Login
+Admin -----> UC_KelolaProfil
+
+' Fungsi spesifik Pemohon
+Pemohon --> UC_Pemohon_Dasbor
+Pemohon --> UC_Pemohon_BuatPermintaanStandar
+Pemohon --> UC_Pemohon_BuatPermintaanLangsung
+Pemohon --> UC_Pemohon_LihatPermintaanSaya
+Pemohon --> UC_Pemohon_LihatDetailPermintaanSaya
+Pemohon --> UC_Pemohon_LihatHasilTingkat
+Pemohon --> UC_Pemohon_HapusPermintaan
+Pemohon --> UC_Pemohon_JelajahiTalenta
+Pemohon --> UC_Pemohon_CariTalenta
+Pemohon --> UC_Pemohon_LihatProfilTalenta
+
+' Fungsi spesifik Talenta
+Talenta --> UC_Talenta_Dasbor
+Talenta --> UC_Talenta_KelolaKompetensi
+Talenta --> UC_Talenta_LihatPermintaanDitugaskan
+Talenta --> UC_Talenta_LihatDetailPermintaanDitugaskan
+Talenta --> UC_Talenta_TanggapiPenugasan
+
+' Fungsi spesifik Admin
+Admin --> UC_Admin_Dasbor
+Admin --> UC_Admin_LihatSemuaPermintaan
+Admin --> UC_Admin_LihatDetailPermintaanApapun
+Admin --> UC_Admin_PerbaruiStatusPermintaan
+Admin --> UC_Admin_TugaskanTalenta
+Admin --> UC_Admin_TandaiSelesai
+Admin --> UC_Admin_KelolaKompetensiSistem
+' Admin --> UC_Admin_KelolaPengguna
+
+@enduml
